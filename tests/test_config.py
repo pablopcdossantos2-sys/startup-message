@@ -24,6 +24,8 @@ def test_sanitized_clamps_and_defaults():
     assert cfg.font_family == config.DEFAULT_FONT_FAMILY
     assert cfg.font_size == config.DEFAULT_FONT_SIZE
     assert Config(font_size=99).sanitized().font_size == config.MAX_FONT_SIZE
+    assert Config(font_family="  " + "A" * 200).sanitized().font_family == "A" * 80
+    assert not config.IMAGE_NAME_RE.fullmatch(HEX + ".png\\n")
     assert Config(seconds=True).sanitized().seconds == config.DEFAULT_SECONDS
 
 
