@@ -62,20 +62,10 @@ jobs:
         with:
           name: StartupMessage-MSIX-TEST-KIT
           path: release/StartupMessage-MSIX-TEST.zip
-      - name: Upload Store-ready MSIX
-        if: ${{ success() }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: StartupMessage-MSIX-STORE
-          path: release/StartupMessage_*.msix
-      - name: Upload validation-only MSIX (Partner Center identity is missing)
-        if: ${{ false }}
+      # Enquanto a arte final e o contato de privacidade não forem validados,
+      # não declarar nenhum pacote como pronto para submissão à Microsoft Store.
+      - name: Upload MSIX unsigned for validation only
         uses: actions/upload-artifact@v7
         with:
           name: StartupMessage-MSIX-VALIDATION-ONLY
           path: release/StartupMessage_*.msix
-      - name: Publish GitHub release asset
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        uses: softprops/action-gh-release@v3
-        with:
-          files: release/StartupMessage_*.msix
