@@ -8,6 +8,8 @@ from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
 
 
+log = logging.getLogger(__name__)
+
 APP_DIR_NAME = "DailyMessage"
 MIN_SECONDS, MAX_SECONDS, DEFAULT_SECONDS = 3, 600, 10
 MAX_TITLE_LEN = 80
