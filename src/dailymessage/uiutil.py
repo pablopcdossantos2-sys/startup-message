@@ -38,8 +38,8 @@ def fit_and_center(win, width: int, height: int, *, min_size=(560, 460), max_rat
     win.minsize(min(min_size[0], w), min(min_size[1], h))
     win.geometry(f"{w}x{h}")
     # A posição horizontal sempre é centralizada; janelas altas começam no topo útil.
-    x = int((screen_w - w * scale) / 2)
-    y = 0 if fill_height_for_large and height >= max_h else int((screen_h - h * scale) / 2) - 20
+    x = left + int((screen_w - w * scale) / 2)
+    y = top if fill_height_for_large and height >= max_h else top + int((screen_h - h * scale) / 2)
     win.wm_geometry(f"+{max(x, 0)}+{max(y, 0)}")
 
 
