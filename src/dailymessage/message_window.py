@@ -56,6 +56,8 @@ class MessageView(ctk.CTkFrame):
         self._refresh()
         self._end = time.monotonic() + self.total
         self._tick()
+        # Segurança independente do contador: não prender a janela se o loop falhar.
+        self.after(int((self.total + 5) * 1000), self._watchdog)
         self.after(150, self._relayout)
         self.after(500, self._relayout)
 
