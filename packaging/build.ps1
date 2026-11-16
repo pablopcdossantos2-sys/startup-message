@@ -89,7 +89,7 @@ New-Item -ItemType Directory -Force $release | Out-Null
     }
     finally {
       if ($cert -and $cert.Thumbprint) {
-        Remove-Item "Cert:\\CurrentUser\\My\\$($cert.Thumbprint)" -Force -ErrorAction SilentlyContinue
+        Remove-Item "Cert:\CurrentUser\My\$($cert.Thumbprint)" -Force -ErrorAction SilentlyContinue
       }
     }
   }
