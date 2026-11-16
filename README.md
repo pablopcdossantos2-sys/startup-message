@@ -14,7 +14,7 @@ Aplicativo **gratuito, distribuído exclusivamente pela Microsoft Store** para W
 
 - 🚀 **Inicia com o Windows** (opcional, liga/desliga com um clique)
 - 🧱 **Mensagem em blocos**, na ordem que você quiser:
-  - 📝 **Texto** — curto ou muito longo (até 30.000 caracteres), em estilo título, normal ou nota
+  - 📝 **Texto** — curto ou muito longo (até 20.000 caracteres por bloco e 30.000 no total), em estilo título, normal ou nota
   - 🖼️ **Imagem** — PNG, JPG, GIF (1º quadro), BMP ou WebP, com legenda opcional
   - ✅ **Checklist interativa** — itens que você marca ao abrir o computador; pode ser **obrigatória** para fechar a janela
 - 🪟 **Janela flexível**: ajusta o tamanho ao conteúdo, pode ser redimensionada/maximizada, quebra o texto automaticamente, rola quando o conteúdo é grande e **nunca distorce as imagens**
