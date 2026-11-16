@@ -65,8 +65,10 @@ try {
         throw "O teste interno do aplicativo retornou código $($process.ExitCode)."
     }
 
-    Write-Host "==> Testando interface gráfica real do StartupMessageRunner.exe"
-    $runnerSmoke = Start-Process -FilePath $runnerExe -ArgumentList "--gui-smoke-test" -PassThru
+    # WindowsApps pode bloquear Start-Process diretamente no executável da extensão
+    # StartupTask. Exercita o mesmo modo --startup pelo executável registrado do app.
+    Write-Host "==> Testando interface em modo de inicialização via executável registrado"
+    $runnerSmoke = Start-Process -FilePath $settingsExe -ArgumentList "--startup --gui-smoke-test" -PassThru
     if (-not $runnerSmoke.WaitForExit(20000)) {
         Stop-Process -Id $runnerSmoke.Id -Force -ErrorAction SilentlyContinue
         throw "O teste gráfico do Runner excedeu 20 segundos."
