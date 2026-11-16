@@ -297,43 +297,63 @@ class MessageView(ctk.CTkFrame):
         self._apply_native_state()
 
     # ------------------------------------------------------------ estado (tempo + itens)
+    def _release_on_failure(self) -> None:
+        """Falha aberta: nenhum erro de interface pode prender o usuário."""
+        log.exception("Erro no bloqueio; liberando a janela por segurança")
+        self.time_done = True
+        self.locked = False
+        try:
+            self.ok.configure(state="normal", fg_color=self.accent,
+                              hover_color=self.accent_hover, text_color=theme.ON_ACCENT)
+            self.win.protocol("WM_DELETE_WINDOW", self.win.destroy)
+            self.win.attributes("-topmost", False)
+            if winapi.IS_WINDOWS:
+                hwnd = winapi.toplevel_hwnd(self.win)
+                winapi.set_close_enabled(hwnd, enabled=True)
+                winapi.set_caption_boxes(hwnd, minimize=True, maximize=True)
+        except Exception:
+            log.exception("Não foi possível restaurar todos os controles da janela")
+
     def _refresh(self) -> None:
-        total = len(self.vars)
-        done = sum(1 for v in self.vars if v.get())
-        items_ok = done == total
-        if self.items_label is not None:
-            self.items_label.configure(
-                text=self.tr.t("msg.items_progress", done=done, total=total),
-                text_color=theme.SUCCESS if items_ok else theme.MUTED,
-            )
-        if not self.time_done:
-            text, color = self.tr.t("msg.wait"), theme.MUTED
-        elif not items_ok:
-            text, color = self.tr.t("msg.need_items"), self.accent
-        else:
-            text, color = self.tr.t("msg.ready"), theme.SUCCESS
-        self.status.configure(text=text, text_color=color)
-        self._set_locked(not (self.time_done and items_ok))
+        try:
+            total = len(self.vars)
+            done = sum(1 for v in self.vars if v.get())
+            items_ok = done == total
+            if self.items_label is not None:
+                self.items_label.configure(
+                    text=self.tr.t("msg.items_progress", done=done, total=total),
+                    text_color=theme.SUCCESS if items_ok else theme.MUTED,
+                )
+            if not self.time_done:
+                text, color = self.tr.t("msg.wait"), theme.MUTED
+            elif not items_ok:
+                text, color = self.tr.t("msg.need_items"), self.accent
+            else:
+                text, color = self.tr.t("msg.ready"), theme.SUCCESS
+            self.status.configure(text=text, text_color=color)
+            self._set_locked(not (self.time_done and items_ok))
+        except Exception:
+            self._release_on_failure()
 
     def _tick(self) -> None:
         try:
             if not self.winfo_exists():
                 return
+            remaining = self._end - time.monotonic()
+            if remaining <= 0:
+                self.time_done = True
+                self.bar.set(0)
+                self.clock.configure(text=_fmt(0))
+                self._refresh()
+                return
+            secs = math.ceil(remaining)
+            if secs != self._shown:
+                self._shown = secs
+                self.clock.configure(text=_fmt(secs))
+            self.bar.set(remaining / self.total)
+            self.after(TICK_MS, self._tick)
         except Exception:
-            return
-        remaining = self._end - time.monotonic()
-        if remaining <= 0:
-            self.time_done = True
-            self.bar.set(0)
-            self.clock.configure(text=_fmt(0))
-            self._refresh()
-            return
-        secs = math.ceil(remaining)
-        if secs != self._shown:
-            self._shown = secs
-            self.clock.configure(text=_fmt(secs))
-        self.bar.set(remaining / self.total)
-        self.after(TICK_MS, self._tick)
+            self._release_on_failure()
 
     def _close(self) -> None:
         if not self.locked:
