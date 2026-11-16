@@ -471,6 +471,16 @@ class SettingsApp(ctk.CTk):
         if cfgmod.text_too_long(self.blocks):
             self._feedback(tr.t("err.too_long", max=MAX_TOTAL_TEXT), error=True)
             return None
+        for block in self.blocks:
+            if block.get("type") != "checklist":
+                continue
+            items = block.get("items", [])
+            if len(items) > MAX_ITEMS:
+                self._feedback(tr.t("err.too_many_items", max=MAX_ITEMS), error=True)
+                return None
+            if any(len(str(item)) > MAX_ITEM_LEN for item in items):
+                self._feedback(tr.t("err.item_too_long", max=MAX_ITEM_LEN), error=True)
+                return None
         blocks = cfgmod.sanitize_blocks(self.blocks)
         if not blocks:
             self._feedback(tr.t("err.no_content"), error=True)
