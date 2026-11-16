@@ -92,7 +92,7 @@ def get_status() -> Status:
         return _winrt_status()
     except Exception:
         log.exception("Falha ao consultar inicialização automática")
-        return Status(False, True)
+        return Status(False, False, "autostart.error")
 
 
 def set_enabled(enabled: bool) -> Status:
