@@ -91,7 +91,11 @@ def main(argv: list[str] | None = None) -> int:
             from .message_window import run_startup_message
 
             delay = 0.0 if "--no-delay" in argv else 2.0
-            run_startup_message(cfg, Translator(cfg.language), delay_seconds=delay)
+            run_startup_message(
+                cfg, Translator(cfg.language),
+                delay_seconds=0.0 if "--gui-smoke-test" in argv else delay,
+                smoke_test="--gui-smoke-test" in argv,
+            )
         else:
             from .settings_window import run_settings
 
