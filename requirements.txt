@@ -2,7 +2,7 @@ customtkinter>=5.2.2
 pillow>=10.0
 pystray>=0.19.5
 winrt-runtime>=2.0.0; sys_platform == "win32"
-winrt-Windows.Foundation>=2.0.0; sys_platform == "win32"
+winrt-Windows.Foundation>=4!10.0.28000.2957; sys_platform == "win32"
 winrt-Windows.Foundation.Collections>=2.0.0; sys_platform == "win32"
 winrt-Windows.ApplicationModel>=2.0.0; sys_platform == "win32"
 winrt-Windows.Storage>=2.0.0; sys_platform == "win32"
