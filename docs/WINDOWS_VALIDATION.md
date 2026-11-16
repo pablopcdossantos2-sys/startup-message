@@ -26,7 +26,12 @@ Faça os testes em uma conta Windows comum, sem privilégios administrativos, ap
 
 ### 1. Primeira execução e configurações
 
+Para validar o kit de testes, abra a execução mais recente aprovada de [GitHub Actions](https://github.com/pablopcdossantos2-sys/startup-message/actions/workflows/build.yml), baixe o artefato **StartupMessage-MSIX-TEST-KIT**, extraia o ZIP e execute `Install-StartupMessage-Test.cmd`. A conta Windows usada para testar deve ser a mesma que iniciou o instalador; a autorização de administrador serve apenas para confiar o certificado do pacote de teste. Não substitua uma instalação existente sem salvar seus dados.
+
 - [ ] Abrir o StartupMessage pelo menu Iniciar.
+- [ ] Confirmar que o aplicativo foi instalado na conta Windows correta (não apenas na conta usada para autorizar a UAC).
+- [ ] Abrir uma segunda vez o ícone do StartupMessage; confirmar que a janela existente vem para frente e permanece maximizada.
+- [ ] Confirmar que a janela abre maximizada, sem encobrir indevidamente a barra de tarefas.
 - [ ] Confirmar que a janela de configurações abre sem console ou erro.
 - [ ] Adicionar blocos de texto, imagem e checklist.
 - [ ] Reordenar blocos, remover um bloco e salvar.
@@ -74,6 +79,8 @@ Observação: o usuário precisa abrir o aplicativo pelo menos uma vez para regi
 - [ ] Confirmar que não são necessários privilégios administrativos para o uso normal do aplicativo.
 
 ## Dados a registrar
+
+Use `winver` (Win + R → digite `winver`) para identificar a edição e a versão do Windows. Use Configurações → Sistema → Tela para consultar a escala de exibição.
 
 Anote versão do Windows, arquitetura, escala de tela, resultado de cada teste e qualquer mensagem de erro. Se houver falha, anexe o arquivo de log local do StartupMessage e uma captura de tela, removendo informações privadas da mensagem antes de compartilhar.
 

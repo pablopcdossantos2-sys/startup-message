@@ -9,9 +9,10 @@ Este kit instala a versão de validação do StartupMessage no Windows. Ele incl
 
 1. Extraia todos os arquivos do ZIP para uma pasta.
 2. Clique duas vezes em Install-StartupMessage-Test.cmd.
-3. O Windows exibirá uma solicitação de administrador (UAC), pois o certificado de assinatura precisa ser confiado no repositório Computador Local → Pessoas Confiáveis.
-4. Aceite a solicitação. O script confere se o certificado corresponde à assinatura do MSIX, importa apenas o certificado público e instala o aplicativo.
-5. Depois da confirmação, abra StartupMessage pelo menu Iniciar.
+3. O instalador confere a identidade e a assinatura do MSIX antes de alterar o computador. Se o aplicativo já estiver instalado, ele interrompe o processo para preservar a instalação existente.
+4. Se o certificado ainda não estiver na lista de confiança do Windows, será solicitado um administrador (UAC) **somente para confiar o certificado público** em Computador Local → Pessoas Confiáveis.
+5. Depois da autorização, a instalação do aplicativo é feita **na conta Windows que iniciou o instalador**, mesmo que outra conta administrativa tenha autorizado a UAC. Não é preciso executar o instalador inteiro como administrador.
+6. Abra o StartupMessage pelo menu Iniciar.
 
 **Instalação já existente:** o instalador verifica o nome e a versão do MSIX e interrompe o processo caso encontre o mesmo aplicativo instalado. Isso evita substituir dados de uma instalação ativa (inclusive da Store). Se quiser testar o novo kit, faça primeiro um backup dos dados importantes e desinstale manualmente a versão anterior. Não existe atualização automática por esse kit.
 
