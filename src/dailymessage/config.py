@@ -72,7 +72,7 @@ def sanitize_blocks(raw) -> list[dict]:
                         "text": text})
         elif kind == "image":
             name = b.get("file")
-            if not (isinstance(name, str) and IMAGE_NAME_RE.match(name)) or images >= MAX_IMAGES:
+            if not (isinstance(name, str) and IMAGE_NAME_RE.fullmatch(name)) or images >= MAX_IMAGES:
                 continue
             images += 1
             out.append({"type": "image", "file": name,
