@@ -136,6 +136,8 @@ STRINGS: dict[str, dict[str, str]] = {
         "err.too_many_blocks": "Limit of {max} blocks reached.",
         "err.too_many_images": "Limit of {max} images reached.",
         "err.too_long": "Text exceeds the limit ({max} characters in total).",
+        "err.too_many_items": "Each checklist supports up to {max} items.",
+        "err.item_too_long": "Each checklist item supports up to {max} characters.",
         "err.save": "Could not save: {detail}",
         "msg.wait": "You can continue in",
         "msg.need_items": "Time is up. Check all required items to continue.",
