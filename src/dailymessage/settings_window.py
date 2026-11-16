@@ -159,9 +159,13 @@ class SettingsApp(ctk.CTk):
         font_row.pack(fill="x", pady=(4, 12))
         self.font_family_var = ctk.StringVar(value=cfg.font_family)
         try:
-            available_fonts = sorted(set(tkfont.families(self)) | {cfg.font_family, cfgmod.DEFAULT_FONT_FAMILY})
+            installed = {name.casefold(): name for name in tkfont.families(self)
+                         if name and not name.startswith("@")}
+            available_fonts = [installed[name.casefold()] for name in cfgmod.FONT_FAMILIES
+                               if name.casefold() in installed]
+            available_fonts = sorted(set(available_fonts) | {cfg.font_family, cfgmod.DEFAULT_FONT_FAMILY})
         except Exception:
-            available_fonts = list(cfgmod.FONT_FAMILIES)
+            available_fonts = sorted(set(cfgmod.FONT_FAMILIES) | {cfg.font_family})
         ctk.CTkOptionMenu(font_row, values=available_fonts, variable=self.font_family_var,
                           width=210, height=36, corner_radius=10, font=theme.font(13),
                           dropdown_font=theme.font(13), fg_color=theme.SURFACE_ALT,
