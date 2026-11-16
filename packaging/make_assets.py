@@ -10,6 +10,7 @@ from PIL import Image, ImageDraw
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "assets"
 MSIX_ASSETS = ROOT / "packaging" / "Assets"
+PLACEHOLDER_MARKER = ASSETS / "PLACEHOLDER_ASSETS.txt"
 S = 1024
 
 
@@ -59,8 +60,44 @@ def main() -> None:
     icon = img.resize((130, 130), Image.Resampling.LANCZOS)
     wide.paste(icon, ((310 - 130) // 2, 10), icon)
     wide.save(MSIX_ASSETS / "Wide310x150Logo.png")
-    print("Assets gerados.")
+    PLACEHOLDER_MARKER.write_text(
+        "Ícones provisórios gerados automaticamente. "
+        "Substitua-os pela arte final e remova este marcador apenas após aprovação.\n",
+        encoding="utf-8",
+    )
+    print("Assets provisórios gerados: não enviar à Microsoft Store.")
+
+
+def check_store_assets() -> None:
+    """Rejeita conjunto incompleto e qualquer arte gerada por este script."""
+    expected = [ASSETS / "icon.ico", ASSETS / "icon.png"]
+    expected.extend(MSIX_ASSETS / f"{name}.png" for name in
+                    ("StoreLogo", "Square44x44Logo", "Square71x71Logo",
+                     "Square150x150Logo", "Square310x310Logo", "Wide310x150Logo"))
+    missing = [str(path.relative_to(ROOT)) for path in expected if not path.is_file()]
+    if missing:
+        raise ValueError("Arquivos de identidade visual ausentes: " + ", ".join(missing))
+    if PLACEHOLDER_MARKER.exists():
+        raise ValueError("Ícones provisórios detectados: aprovação de arte final pendente.")
+    for path in expected:
+        try:
+            with Image.open(path) as img:
+                img.verify()
+        except (OSError, ValueError) as exc:
+            raise ValueError(f"Ícone inválido: {path.name}") from exc
+    # O marcador pode ser apagado por engano; confira também o desenho padrão.
+    with Image.open(ASSETS / "icon.png") as icon:
+        if icon.convert("RGBA").size == (S, S):
+            if icon.convert("RGBA").tobytes() == master().tobytes():
+                raise ValueError("O icon.png ainda é o placeholder gerado automaticamente.")
+    print("Assets estruturais conferidos. Aprovação humana continua necessária.")
 
 
 if __name__ == "__main__":
-    main()
+    if "--check-store" in sys.argv:
+        try:
+            check_store_assets()
+        except ValueError as exc:
+            raise SystemExit(f"ARTE NÃO APROVADA: {exc}") from exc
+    else:
+        main()

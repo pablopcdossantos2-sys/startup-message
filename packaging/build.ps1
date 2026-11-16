@@ -7,6 +7,10 @@
 param(
   [string]$Version,
   [switch]$SignTest,
+  [switch]$StoreSubmission,
+  [switch]$ArtworkApproved,
+  [switch]$PrivacyContactApproved,
+  [switch]$WindowsValidationPassed,
   [string]$IdentityName = "Publisher.StartupMessage",
   [string]$Publisher = "CN=Publisher",
   [string]$PublisherDisplayName = "Publisher",
@@ -37,6 +41,21 @@ if ($IdentityName -eq "Publisher.StartupMessage" -or $Publisher -eq "CN=Publishe
 Write-Host "==> Gerando ícones (placeholders, se ainda não existirem)"
 python packaging/make_assets.py
 if ($LASTEXITCODE -ne 0) { throw "Geração/validação dos ícones falhou" }
+
+if ($StoreSubmission) {
+  if ($SignTest) { throw "Pacote para Store não pode usar assinatura de teste (-SignTest)." }
+  if ($IdentityName -eq "Publisher.StartupMessage" -or $Publisher -eq "CN=Publisher") {
+    throw "Identidade definitiva do Partner Center obrigatória para Store."
+  }
+  if (-not ($ArtworkApproved -and $PrivacyContactApproved -and $WindowsValidationPassed)) {
+    throw "Antes da Store, confirme -ArtworkApproved -PrivacyContactApproved -WindowsValidationPassed."
+  }
+  python packaging/make_assets.py --check-store
+  if ($LASTEXITCODE -ne 0) { throw "Verificação de arte final reprovada." }
+  Write-Host "==> Modo de submissão Store habilitado por confirmações explícitas"
+} else {
+  Write-Warning "Pacote de VALIDAÇÃO, não enviar à Store: falta confirmação de arte, contato e testes no Windows."
+}
 
 Write-Host "==> PyInstaller"
 foreach ($d in "build", "dist", "release") { if (Test-Path $d) { Remove-Item $d -Recurse -Force } }

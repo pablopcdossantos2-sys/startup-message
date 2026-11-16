@@ -15,7 +15,25 @@
   -DisplayName "<Nome reservado>"
 ```
 O arquivo `release/StartupMessage_<versão>_x64.msix` **não precisa ser assinado**: a Store assina. Não é gerado ZIP portátil.
-Substitua os ícones placeholder (`assets/` e `packaging/Assets/`) pela arte final.
+
+**Atenção:** a compilação padrão permanece **somente para validação**, independentemente do nome do arquivo. Para solicitar um pacote destinado à Store, você deverá:
+
+1. Substituir **todos** os ícones provisórios em `assets/` e `packaging/Assets/` pela arte final aprovada. Remover `assets/PLACEHOLDER_ASSETS.txt` **somente depois** de substituir e aprovar a arte.
+2. Publicar e conferir um canal de suporte adequado para solicitações privadas na política de privacidade.
+3. Executar e registrar todos os testes manuais de `docs/WINDOWS_VALIDATION.md` em Windows 10 e Windows 11.
+4. Conferir a identidade e a versão no Partner Center. A versão MSIX deve ser superior à anterior.
+5. Executar uma compilação específica para submissão, **sem** `-SignTest`:
+
+```powershell
+./packaging/build.ps1 `
+  -IdentityName "pablopcdsantos.DailyMessage" `
+  -Publisher "CN=A3E973B8-1411-4314-B754-F3DADD99C070" `
+  -PublisherDisplayName "pablopcdsantos" `
+  -DisplayName "StartupMessage" `
+  -StoreSubmission -ArtworkApproved -PrivacyContactApproved -WindowsValidationPassed
+```
+
+Os três últimos parâmetros são **declarações manuais de aprovação** — não substituem revisão ou testes. O script também rejeita arquivos faltantes, inválidos, marcados como provisórios ou o ícone principal idêntico ao placeholder. O CI continuará publicando `VALIDATION-ONLY` até uma decisão explícita de alterar o pipeline.
 
 ## 3. Ficha do app (checklist)
 - [ ] Categoria: *Utilitários e ferramentas* · Preço: **Gratuito**
