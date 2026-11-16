@@ -32,7 +32,7 @@ class SettingsApp(ctk.CTk):
         self.blocks: list[dict] = copy.deepcopy(cfg.blocks)
         self._getters: list = []
         self.tr = Translator(cfg.language)
-        self.title(self.tr.t("app.name"))
+        self.title(self.tr.t("settings.window_title"))
         uiutil.fit_and_center(self, 780, 860, min_size=(660, 520))
         uiutil.apply_icon(self)
         self._build()
