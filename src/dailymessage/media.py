@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import uuid
+import warnings
 from pathlib import Path
 
 from PIL import Image, ImageOps
