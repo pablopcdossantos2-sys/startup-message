@@ -86,6 +86,11 @@ jobs:
           Copy-Item "packaging/Install-StartupMessage-Test.cmd" $kit
           Copy-Item "docs/INSTALL_TEST_PACKAGE.md" (Join-Path $kit "LEIA-ANTES-DE-INSTALAR.md")
           Compress-Archive -Path "$kit/*" -DestinationPath "release/StartupMessage-MSIX-TEST.zip" -Force
+      - name: Validate installer kit signature and manifest without installing
+        shell: pwsh
+        run: |
+          & "release/test-kit/Install-StartupMessage-Test.ps1" -CheckOnly
+          if ($LASTEXITCODE -ne 0) { throw "Validação de kit falhou." }
       - name: Upload test installation kit
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:

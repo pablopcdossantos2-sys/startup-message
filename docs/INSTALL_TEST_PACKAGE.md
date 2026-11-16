@@ -13,12 +13,23 @@ Este kit instala a versão de validação do StartupMessage no Windows. Ele incl
 4. Aceite a solicitação. O script confere se o certificado corresponde à assinatura do MSIX, importa apenas o certificado público e instala o aplicativo.
 5. Depois da confirmação, abra StartupMessage pelo menu Iniciar.
 
+**Instalação já existente:** o instalador verifica o nome e a versão do MSIX e interrompe o processo caso encontre o mesmo aplicativo instalado. Isso evita substituir dados de uma instalação ativa (inclusive da Store). Se quiser testar o novo kit, faça primeiro um backup dos dados importantes e desinstale manualmente a versão anterior. Não existe atualização automática por esse kit.
+
+**Conferência sem instalar:** se você quiser verificar a identidade do pacote e se o certificado corresponde à assinatura, abra o PowerShell na pasta extraída e execute:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Install-StartupMessage-Test.ps1" -CheckOnly
+```
+
+Essa conferência não solicita elevação, não instala o MSIX e não altera certificados.
+
 O erro 0x800B010A acontece quando o Windows não consegue construir uma cadeia de certificados confiável. Um pacote assinado com certificado autoassinado para teste não é confiável automaticamente. A Microsoft orienta importar o certificado de teste em Computador Local → Pessoas Confiáveis; importar no repositório do usuário atual não é suficiente para o App Installer em alguns cenários. Não é necessário e não é recomendado instalar este certificado no repositório de Autoridades de Certificação Raiz Confiáveis.
 
 ## Importante
 
 - Este pacote serve somente para validação técnica. Ele não é o pacote final da Microsoft Store.
 - O certificado foi criado apenas para este build. Um novo build poderá gerar outro certificado; nesse caso, use o certificado incluído no mesmo ZIP.
+- Se a instalação falhar depois de adicionar um novo certificado, o instalador tenta remover automaticamente esse certificado. Após uma instalação bem-sucedida ele permanece confiável para permitir o uso do pacote de teste.
 - O instalador não compartilha nem instala a chave privada do certificado.
 - Para remover o aplicativo, use Configurações do Windows → Aplicativos → Aplicativos instalados → StartupMessage → Desinstalar.
 - Para remover o certificado de teste depois, abra certlm.msc, entre em Pessoas Confiáveis → Certificados, localize o certificado criado para este build e remova somente esse certificado. Não remova certificados de outros programas.
