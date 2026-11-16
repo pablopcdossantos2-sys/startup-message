@@ -130,7 +130,12 @@ class SingleInstance:
         k32.CreateMutexW.argtypes = [wintypes.LPVOID, wintypes.BOOL, wintypes.LPCWSTR]
         k32.CreateMutexW.restype = wintypes.HANDLE
         self._handle = k32.CreateMutexW(None, False, self.name)
-        return ctypes.get_last_error() != ERROR_ALREADY_EXISTS
+        if not self._handle:
+            raise OSError(ctypes.get_last_error(), "CreateMutexW falhou")
+        if ctypes.get_last_error() == ERROR_ALREADY_EXISTS:
+            self.release()
+            return False
+        return True
 
     def release(self) -> None:
         if IS_WINDOWS and self._handle:
