@@ -1,4 +1,4 @@
-customtkinter>=5.2.2
+customtkinter>=6.0.0
 pillow>=10.0
 pystray>=0.19.5
 winrt-runtime>=2.0.0; sys_platform == "win32"
