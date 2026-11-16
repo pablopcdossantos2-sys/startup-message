@@ -26,10 +26,12 @@ def center_window(win, width: int, height: int) -> None:
 def fit_and_center(win, width: int, height: int, *, min_size=(560, 460), max_ratio: float = 0.9, fill_height_for_large: bool = False) -> None:
     """Ajusta ao conteúdo; mensagens longas podem ocupar toda a altura útil."""
     scale = _window_scale(win)
-    screen_w = win.winfo_screenwidth()
-    screen_h = win.winfo_screenheight()
+    work = winapi.primary_work_area()
+    left, top, right, bottom = work or (0, 0, win.winfo_screenwidth(), win.winfo_screenheight() - 80)
+    screen_w = right - left
+    screen_h = bottom - top
     max_w = screen_w / scale * max_ratio
-    available_h = max(300, screen_h - 80)  # preserva a área da barra de tarefas
+    available_h = max(300, screen_h)
     max_h = available_h / scale if fill_height_for_large else available_h / scale * max_ratio
     w = int(min(max(width, min_size[0]), max_w))
     h = int(min(max(height, min_size[1]), max_h))
