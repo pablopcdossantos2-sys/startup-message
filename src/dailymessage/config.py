@@ -24,7 +24,7 @@ MIN_FONT_SIZE, MAX_FONT_SIZE, DEFAULT_FONT_SIZE = 10, 40, 16
 DEFAULT_FONT_FAMILY = "Segoe UI"
 FONT_FAMILIES = ("Segoe UI", "Arial", "Calibri", "Cambria", "Consolas", "Georgia", "Tahoma", "Times New Roman", "Verdana")
 TEXT_STYLES = ("body", "heading", "note")
-IMAGE_NAME_RE = re.compile(r"^[0-9a-f]{32}\.(png|jpg)$")
+IMAGE_NAME_RE = re.compile(r"[0-9a-f]{32}\.(?:png|jpg)")
 DEFAULT_TEXT = (
     "Que o seu dia seja produtivo. Respire fundo, organize suas "
     "prioridades e comece com calma."
