@@ -31,7 +31,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "image.error": "Não foi possível usar a imagem: {detail}",
         "image.missing": "(imagem indisponível)",
         "check.title.placeholder": "Título da checklist (opcional)",
-        "check.items_hint": "Um item por linha.",
+        "check.items_hint": "Um item por linha (máximo de 30 itens; 200 caracteres por item).",
         "check.required": "Obrigatória para fechar a janela",
         "card.time": "Tempo de exibição obrigatório",
         "time.desc": "A janela só poderá ser fechada quando o contador chegar a zero e todos os itens obrigatórios estiverem marcados.",
