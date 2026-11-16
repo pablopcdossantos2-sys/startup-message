@@ -33,8 +33,12 @@ def master() -> Image.Image:
 
 
 def main() -> None:
-    if (ASSETS / "icon.ico").exists() and "--force" not in sys.argv:
-        print("Assets já existem (use --force para sobrescrever).")
+    expected = [ASSETS / "icon.ico", ASSETS / "icon.png"]
+    expected.extend(MSIX_ASSETS / f"{name}.png" for name in
+                    ("StoreLogo", "Square44x44Logo", "Square71x71Logo",
+                     "Square150x150Logo", "Square310x310Logo", "Wide310x150Logo"))
+    if all(path.exists() for path in expected) and "--force" not in sys.argv:
+        print("Todos os assets já existem (use --force para sobrescrever).")
         return
     ASSETS.mkdir(exist_ok=True)
     MSIX_ASSETS.mkdir(parents=True, exist_ok=True)
