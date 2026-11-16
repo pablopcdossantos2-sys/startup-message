@@ -29,6 +29,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "image.none": "Nenhuma imagem selecionada",
         "image.caption.placeholder": "Legenda (opcional)",
         "image.filter": "Imagens",
+        "image.all_files": "Todos os arquivos",
         "image.error": "Não foi possível usar a imagem: {detail}",
         "image.missing": "(imagem indisponível)",
         "check.title.placeholder": "Título da checklist (opcional)",
