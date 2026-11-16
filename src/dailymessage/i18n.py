@@ -100,7 +100,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "image.error": "Could not use the image: {detail}",
         "image.missing": "(image unavailable)",
         "check.title.placeholder": "Checklist title (optional)",
-        "check.items_hint": "One item per line.",
+        "check.items_hint": "One item per line (up to 30 items; 200 characters each).",
         "check.required": "Required to close the window",
         "card.time": "Required display time",
         "time.desc": "The window can only be closed once the countdown reaches zero and all required items are checked.",
