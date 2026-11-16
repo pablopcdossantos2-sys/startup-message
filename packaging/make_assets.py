@@ -74,7 +74,7 @@ def check_store_assets() -> None:
     expected.extend(MSIX_ASSETS / f"{name}.png" for name in
                     ("StoreLogo", "Square44x44Logo", "Square71x71Logo",
                      "Square150x150Logo", "Square310x310Logo", "Wide310x150Logo"))
-    missing = [str(path.relative_to(ROOT)) for path in expected if not path.is_file()]
+    missing = [path.name for path in expected if not path.is_file()]
     if missing:
         raise ValueError("Arquivos de identidade visual ausentes: " + ", ".join(missing))
     if PLACEHOLDER_MARKER.exists():
