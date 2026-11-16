@@ -81,6 +81,7 @@ STRINGS: dict[str, dict[str, str]] = {
     "en": {
         "app.name": "StartupMessage",
         "settings.subtitle": "Show a message every time Windows starts.",
+        "settings.window_title": "StartupMessage — Settings",
         "card.content": "Message content",
         "content.hint": "Build the message with text, image and checklist blocks. The window adapts to the content size ({max} text characters in total).",
         "field.title": "Title",
