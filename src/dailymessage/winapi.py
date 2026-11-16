@@ -46,6 +46,8 @@ def _u32():
         u.SetForegroundWindow.restype = wintypes.BOOL
         u.ShowWindow.argtypes = [wintypes.HWND, ctypes.c_int]
         u.ShowWindow.restype = wintypes.BOOL
+        u.IsIconic.argtypes = [wintypes.HWND]
+        u.IsIconic.restype = wintypes.BOOL
         _user32 = u
     return _user32
 
@@ -85,7 +87,9 @@ def bring_to_front(hwnd: int) -> None:
         return
     try:
         u = _u32()
-        u.ShowWindow(hwnd, SW_RESTORE)
+        # SW_RESTORE restauraria também janelas maximizadas para tamanho normal.
+        if u.IsIconic(hwnd):
+            u.ShowWindow(hwnd, SW_RESTORE)
         u.SetForegroundWindow(hwnd)
     except Exception:
         log.debug("SetForegroundWindow falhou", exc_info=True)
@@ -118,7 +122,8 @@ def activate_existing_settings() -> bool:
         for title in ("StartupMessage — Configurações", "StartupMessage — Settings"):
             hwnd = u.FindWindowW(None, title)
             if hwnd:
-                u.ShowWindow(hwnd, SW_RESTORE)
+                if u.IsIconic(hwnd):
+                    u.ShowWindow(hwnd, SW_RESTORE)
                 u.SetForegroundWindow(hwnd)
                 return True
     except Exception:

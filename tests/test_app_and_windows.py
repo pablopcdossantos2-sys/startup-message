@@ -58,3 +58,47 @@ def test_package_api_errors_not_treated_as_packaged(monkeypatch):
         ))
         monkeypatch.setattr(ctypes, "windll", fake, raising=False)
         assert winapi.is_packaged() is expected
+
+
+class FakeWinFunction:
+    def __init__(self, return_value):
+        self.return_value = return_value
+        self.calls = []
+
+    def __call__(self, *args):
+        self.calls.append(args)
+        return self.return_value
+
+
+class FakeUser32:
+    def __init__(self, minimized):
+        self.FindWindowW = FakeWinFunction(123)
+        self.IsIconic = FakeWinFunction(minimized)
+        self.ShowWindow = FakeWinFunction(1)
+        self.SetForegroundWindow = FakeWinFunction(1)
+
+
+def test_activating_existing_maximized_window_keeps_its_size(monkeypatch):
+    monkeypatch.setattr(winapi, "IS_WINDOWS", True)
+    u = FakeUser32(minimized=False)
+    monkeypatch.setattr(winapi, "_u32", lambda: u)
+    assert winapi.activate_existing_settings()
+    assert u.ShowWindow.calls == []
+    assert u.SetForegroundWindow.calls == [(123,)]
+
+
+def test_activating_minimized_window_restores_it(monkeypatch):
+    monkeypatch.setattr(winapi, "IS_WINDOWS", True)
+    u = FakeUser32(minimized=True)
+    monkeypatch.setattr(winapi, "_u32", lambda: u)
+    assert winapi.activate_existing_settings()
+    assert u.ShowWindow.calls == [(123, winapi.SW_RESTORE)]
+
+
+def test_bring_to_front_does_not_unmaximize(monkeypatch):
+    monkeypatch.setattr(winapi, "IS_WINDOWS", True)
+    u = FakeUser32(minimized=False)
+    monkeypatch.setattr(winapi, "_u32", lambda: u)
+    winapi.bring_to_front(123)
+    assert not u.ShowWindow.calls
+    assert u.SetForegroundWindow.calls == [(123,)]
