@@ -76,7 +76,7 @@ try {
     if ($runnerSmoke.ExitCode -ne 0) {
         throw "O Runner não conseguiu iniciar a interface gráfica (código $($runnerSmoke.ExitCode))."
     }
-    Write-Host "MSIX_RUNNER_GUI_SMOKE=PASS"
+    Write-Host "MSIX_STARTUP_GUI_SMOKE=PASS"
 
     Write-Host "MSIX_INSTALL_TEST=PASS"
     Write-Host "MSIX_STARTUP_TASK_MANIFEST=PASS"
