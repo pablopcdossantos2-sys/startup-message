@@ -76,7 +76,9 @@ def _winrt_set(enabled: bool) -> Status:
         task.disable()
         return int(task.state)
 
-    return _state_to_status(_run_winrt(go))
+    # O diálogo do Windows pode permanecer aberto enquanto o usuário decide.
+    # A UI chama esta operação em thread; 15 s seria insuficiente para consentimento.
+    return _state_to_status(_run_winrt(go, timeout=120.0))
 
 
 # ---------- API pública ----------
