@@ -56,7 +56,7 @@ O workflow já utiliza esses valores como padrão. Se desejar, eles também pode
 - MSIX_PUBLISHER_DISPLAY_NAME
 - MSIX_DISPLAY_NAME
 
-The workflow uses these values automatically. If all four values are present, the artifact is named `StartupMessage-MSIX-STORE`. If any value is missing, the build still runs for technical validation but the artifact is named `StartupMessage-MSIX-VALIDATION-ONLY`; that package must not be submitted to the Store.
+O workflow usa esses valores, mas **publica somente `StartupMessage-MSIX-VALIDATION-ONLY`** nesta fase. Não submeta esse pacote à Store: falta aprovar os ícones definitivos, o canal de suporte e os testes funcionais em Windows. O MSIX não assinado não é instalável diretamente; use o kit de instalação de teste para validar.
 
 ## 9. Atualizações
 
