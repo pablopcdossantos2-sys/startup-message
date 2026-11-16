@@ -27,6 +27,12 @@ def import_image(src) -> str:
     if src.stat().st_size > MAX_SOURCE_BYTES:
         raise ValueError("arquivo maior que 25 MB")
     try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            with Image.open(src) as probe:
+                if probe.width * probe.height > MAX_IMAGE_PIXELS:
+                    raise ValueError("imagem acima do limite de 20 megapixels")
+                probe.verify()
         with Image.open(src) as im:
             im = ImageOps.exif_transpose(im)
             im.load()
