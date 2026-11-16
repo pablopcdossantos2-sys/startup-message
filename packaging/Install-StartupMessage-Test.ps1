@@ -1,6 +1,8 @@
 [CmdletBinding()]
 param(
-    [switch]$CheckOnly
+    [switch]$CheckOnly,
+    [switch]$CertificateOnly,
+    [switch]$RemoveCertificateOnly
 )
 
 $ErrorActionPreference = "Stop"
@@ -61,6 +63,27 @@ if ($CheckOnly) {
     return
 }
 
+# Separação de privilégios: apenas confiar/remover certificado requer administrador.
+# Add-AppxPackage DEVE rodar no usuário original, mesmo quando a UAC usa outra conta.
+$identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+$principal = [Security.Principal.WindowsPrincipal]::new($identity)
+$isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+$storePath = "Cert:\\LocalMachine\\TrustedPeople"
+
+if ($CertificateOnly -or $RemoveCertificateOnly) {
+    if (-not $isAdmin) { throw "Operações sobre certificados exigem autorização de administrador." }
+    if ($CertificateOnly -and $RemoveCertificateOnly) { throw "Escolha apenas uma operação de certificado." }
+    if ($CertificateOnly) {
+        $existing = Get-ChildItem $storePath | Where-Object Thumbprint -EQ $certificate.Thumbprint
+        if (-not $existing) {
+            Import-Certificate -FilePath $certificatePath -CertStoreLocation $storePath | Out-Null
+        }
+    } else {
+        Remove-Item -Path (Join-Path $storePath $certificate.Thumbprint) -Force -ErrorAction Stop
+    }
+    return
+}
+
 # A instalação manual não pode substituir silenciosamente a versão da Store
 # ou uma cópia de desenvolvimento já usada e configurada.
 $prior = Get-AppxPackage -Name $packageName | Select-Object -First 1
@@ -68,34 +91,43 @@ if ($prior) {
     throw "Já existe uma instalação de $packageName (versão $($prior.Version)). Não será substituída. Faça backup das configurações e desinstale manualmente a versão antiga antes de instalar o kit de teste, se desejar."
 }
 
-$identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-$principal = [Security.Principal.WindowsPrincipal]::new($identity)
-$isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-
-if (-not $isAdmin) {
-    Write-Host "O certificado de teste precisa ser confiado pelo computador. O Windows solicitará autorização de administrador." -ForegroundColor Yellow
-    $arguments = '-NoProfile -ExecutionPolicy Bypass -File "' + $PSCommandPath + '"'
-    $elevated = Start-Process -FilePath "powershell.exe" -Verb RunAs -ArgumentList $arguments -Wait -PassThru
-    exit $elevated.ExitCode
+$existingTrusted = Get-ChildItem $storePath | Where-Object Thumbprint -EQ $certificate.Thumbprint
+$addedCertificate = -not [bool]$existingTrusted
+if ($addedCertificate) {
+    if ($isAdmin) {
+        Write-Host "==> Confiando certificado em Computador Local > Pessoas Confiáveis..."
+        Import-Certificate -FilePath $certificatePath -CertStoreLocation $storePath | Out-Null
+    } else {
+        Write-Host "==> Solicitando administrador SOMENTE para confiar o certificado de teste..." -ForegroundColor Yellow
+        $arguments = '-NoProfile -ExecutionPolicy Bypass -File "' + $PSCommandPath + '" -CertificateOnly'
+        $elevated = Start-Process -FilePath "powershell.exe" -Verb RunAs -ArgumentList $arguments -Wait -PassThru
+        if ($elevated.ExitCode -ne 0) {
+            throw "Não foi possível confiar o certificado de teste (código $($elevated.ExitCode))."
+        }
+    }
 }
 
-Write-Host "==> Adicionando certificado a Computador Local > Pessoas Confiáveis..."
-$storePath = "Cert:\LocalMachine\TrustedPeople"
-$existing = Get-ChildItem $storePath | Where-Object Thumbprint -EQ $certificate.Thumbprint
-$addedCertificate = $false
 try {
-    if (-not $existing) {
-        Import-Certificate -FilePath $certificatePath -CertStoreLocation $storePath | Out-Null
-        $addedCertificate = $true
-    }
-
-    Write-Host "==> Instalando StartupMessage..."
+    # Executado na conta de quem abriu o instalador, não na conta usada na UAC.
+    Write-Host "==> Instalando StartupMessage para a conta atual..."
     Add-AppxPackage -Path $msixPath -ErrorAction Stop
 }
 catch {
-    # Se a instalação falhar, não deixar um novo certificado de confiança na máquina.
     if ($addedCertificate) {
-        Remove-Item -Path (Join-Path $storePath $certificate.Thumbprint) -Force -ErrorAction SilentlyContinue
+        try {
+            if ($isAdmin) {
+                Remove-Item -Path (Join-Path $storePath $certificate.Thumbprint) -Force -ErrorAction Stop
+            } else {
+                $arguments = '-NoProfile -ExecutionPolicy Bypass -File "' + $PSCommandPath + '" -RemoveCertificateOnly'
+                $elevated = Start-Process -FilePath "powershell.exe" -Verb RunAs -ArgumentList $arguments -Wait -PassThru
+                if ($elevated.ExitCode -ne 0) {
+                    Write-Warning "Não foi possível remover o certificado temporário; remova-o manualmente em certlm.msc."
+                }
+            }
+        }
+        catch {
+            Write-Warning "Falha na limpeza do certificado temporário; consulte certlm.msc."
+        }
     }
     throw
 }
