@@ -370,7 +370,7 @@ class SettingsApp(ctk.CTk):
         tr = self.tr
         path = filedialog.askopenfilename(
             parent=self, title=tr.t("image.choose"),
-            filetypes=[(tr.t("image.filter"), "*.png *.jpg *.jpeg *.gif *.bmp *.webp"), ("*", "*.*")])
+            filetypes=[(tr.t("image.filter"), "*.png *.jpg *.jpeg *.gif *.bmp *.webp"), (tr.t("image.all_files"), "*.*")])
         if not path:
             return None
         try:
