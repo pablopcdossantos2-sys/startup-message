@@ -12,6 +12,7 @@ from . import config
 ALLOWED_EXT = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"}
 MAX_SIDE = 2560
 MAX_SOURCE_BYTES = 25 * 1024 * 1024
+MAX_IMAGE_PIXELS = 20_000_000  # 20 MP; evita consumo excessivo de memória
 
 
 def media_dir() -> Path:
