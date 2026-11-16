@@ -91,6 +91,22 @@ def bring_to_front(hwnd: int) -> None:
         log.debug("SetForegroundWindow falhou", exc_info=True)
 
 
+def primary_work_area() -> tuple[int, int, int, int] | None:
+    """Retorna área útil do monitor principal em pixels, excluindo a barra de tarefas."""
+    if not IS_WINDOWS:
+        return None
+    rect = wintypes.RECT()
+    try:
+        success = ctypes.windll.user32.SystemParametersInfoW(
+            0x0030, 0, ctypes.byref(rect), 0  # SPI_GETWORKAREA
+        )
+        if success and rect.right > rect.left and rect.bottom > rect.top:
+            return rect.left, rect.top, rect.right, rect.bottom
+    except Exception:
+        log.exception("Falha ao consultar área útil do monitor")
+    return None
+
+
 def is_packaged() -> bool:
     """True se rodando como app MSIX (com identidade de pacote)."""
     if not IS_WINDOWS:
