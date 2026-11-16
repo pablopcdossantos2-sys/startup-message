@@ -54,8 +54,13 @@ New-Item -ItemType Directory -Force $release | Out-Null
   Copy-Item "dist/StartupMessage/*" $stage -Recurse
   Copy-Item "packaging/Assets" (Join-Path $stage "Assets") -Recurse
 
-  $parts = @($Version.Split('.')); while ($parts.Count -lt 3) { $parts += '0' }
-  $msixVersion = ($parts[0..2] -join '.') + '.0'   # a Store exige o 4º número = 0
+  # O quarto componente da versão MSIX deve permanecer zero; validar os três primeiros.
+  $appVersion = (& python versioning.py).Trim()
+  if ($LASTEXITCODE -ne 0) { throw "Versão MSIX inválida." }
+  if ($Version -ne $appVersion.Substring(0, $appVersion.Length - 2)) {
+    throw "Versão solicitada '$Version' difere da versão definida no aplicativo ('$appVersion')."
+  }
+  $msixVersion = $appVersion
 
   $manifest = Get-Content "packaging/AppxManifest.xml" -Raw -Encoding UTF8
   $manifest = $manifest.Replace("{{IDENTITY_NAME}}", $IdentityName).Replace("{{PUBLISHER}}", $Publisher).
