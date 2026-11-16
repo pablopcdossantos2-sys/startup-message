@@ -15,6 +15,7 @@ def test_import_resolve_cleanup(tmp_path, monkeypatch):
     with Image.open(path) as im:
         assert max(im.size) <= media.MAX_SIDE
     assert media.resolve("../evil.png") is None
+    assert media.resolve(name + "\\n") is None
     other = media.import_image(src)
     media.cleanup({name})
     assert media.resolve(other) is None and media.resolve(name)
