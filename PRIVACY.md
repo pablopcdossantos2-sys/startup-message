@@ -4,7 +4,7 @@
 
 O StartupMessage **não coleta, transmite nem compartilha nenhum dado pessoal**.
 
-- O app **não se conecta à internet** e não possui telemetria, anúncios ou contas.
+- O app **não envia dados automaticamente pela internet** e não possui telemetria, anúncios ou contas. O link de suporte no rodapé pode abrir o navegador, somente quando acionado pelo usuário.
 - O título, os textos, as checklists, o tempo e as preferências visuais ficam salvos **somente no seu computador**
   (na área `LocalState` privada do pacote MSIX; durante o desenvolvimento, em `%LOCALAPPDATA%\DailyMessage\config.json`).
 - As **imagens** que você adiciona são **copiadas** para a pasta local `media` (junto das configurações) e
