@@ -67,6 +67,13 @@ def test_roundtrip(tmp_path, monkeypatch):
     assert config.load() == original
 
 
+def test_load_handles_winrt_unavailable(monkeypatch):
+    def missing_winrt():
+        raise ImportError("winrt indisponível")
+    monkeypatch.setattr(config, "config_path", missing_winrt)
+    assert config.load() == Config()
+
+
 def test_load_corrupted_returns_defaults(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "config_dir", lambda: tmp_path)
     (tmp_path / "config.json").write_text("{ not json", encoding="utf-8")
