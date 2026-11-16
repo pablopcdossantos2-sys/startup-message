@@ -60,4 +60,8 @@ O workflow usa esses valores, mas **publica somente `StartupMessage-MSIX-VALIDAT
 
 ## 9. Atualizações
 
-Aumente __version__ em src/dailymessage/__init__.py, gere um novo MSIX e envie a atualização pelo Partner Center. Mantenha a identidade do pacote e incremente a versão MSIX (o quarto componente permanece zero).
+Aumente `__version__` em `src/dailymessage/__init__.py` antes de cada nova submissão. A versão atual de validação é `1.0.1`, produzindo `1.0.1.0` no MSIX.
+
+O script `python versioning.py` valida e imprime a versão MSIX. O CI verifica versões no formato `X.Y.Z` e, nos builds de tags, exige que a tag `vX.Y.Z` coincida exatamente com o código (por exemplo, `v1.0.1`). A Microsoft Store exige uma versão estritamente superior à da submissão anterior; **verifique no Partner Center qual foi a última versão publicada antes de enviar o próximo pacote**. O quarto componente permanece zero. Não troque `Identity Name` nem `Publisher`.
+
+`requirements-lock.txt` fixa o conjunto de dependências usado no build de Windows e deve ser atualizado somente junto com uma nova validação do CI.
