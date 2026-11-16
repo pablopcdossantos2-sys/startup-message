@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from . import paths
+from . import paths, winapi
 
 log = logging.getLogger(__name__)
 
