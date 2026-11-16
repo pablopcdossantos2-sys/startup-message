@@ -14,7 +14,7 @@ from PIL import Image
 from . import REPO_URL, __version__, autostart, media, theme, uiutil
 from . import config as cfgmod
 from .config import (MAX_BLOCKS, MAX_CAPTION_LEN, MAX_IMAGES, MAX_LIST_TITLE_LEN, MAX_SECONDS,
-                     MAX_TITLE_LEN, MAX_TOTAL_TEXT, MIN_SECONDS, Config)
+                     MAX_TITLE_LEN, MAX_TOTAL_TEXT, MAX_ITEMS, MAX_ITEM_LEN, MIN_SECONDS, Config)
 from .i18n import LANG_NAMES, Translator
 from .message_window import open_preview
 
