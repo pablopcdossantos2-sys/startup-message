@@ -65,7 +65,7 @@ git clone https://github.com/pablopcdossantos2-sys/startup-message.git
 cd startup-message
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements-dev.txt
+pip install -r requirements-lock.txt  # ambiente reproduzível validado no CI para Windows/Python 3.12
 python packaging/make_assets.py          # ícones placeholder
 python launcher.py --settings            # abre as configurações
 python launcher.py --startup --no-delay  # simula a mensagem de boot
