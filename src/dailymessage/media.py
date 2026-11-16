@@ -52,7 +52,7 @@ def import_image(src) -> str:
 
 def resolve(name: str) -> Path | None:
     """Caminho do arquivo salvo, ou None se o nome for inválido/inexistente."""
-    if not isinstance(name, str) or not config.IMAGE_NAME_RE.match(name):
+    if not isinstance(name, str) or not config.IMAGE_NAME_RE.fullmatch(name):
         return None
     path = media_dir() / name
     return path if path.is_file() else None
