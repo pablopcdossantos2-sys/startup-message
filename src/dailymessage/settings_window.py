@@ -432,7 +432,7 @@ class SettingsApp(ctk.CTk):
         self._collect_draft()
         self.cfg.language = code
         self.tr = Translator(code)
-        self.title(self.tr.t("app.name"))
+        self.title(self.tr.t("settings.window_title"))
         self._defer(self._build)
 
     def _apply_autostart(self, st: autostart.Status, error: bool = False) -> None:
