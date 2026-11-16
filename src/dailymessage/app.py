@@ -82,7 +82,9 @@ def main(argv: list[str] | None = None) -> int:
         "Local\\DailyMessage.Startup" if startup else "Local\\DailyMessage.Settings"
     )
     if not guard.acquire():
-        log.info("Já existe uma instância em execução; encerrando.")
+        log.info("Já existe uma instância em execução; restaurando a janela.")
+        if not startup:
+            winapi.activate_existing_settings()
         return 0
     try:
         winapi.set_app_user_model_id()
