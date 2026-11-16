@@ -24,6 +24,25 @@ jobs:
       - name: Verify WinRT APIs used by the MSIX app
         run: python -c "from winrt.windows.applicationmodel import StartupTask; from winrt.windows.storage import ApplicationData; print('WinRT OK')"
       - run: python -m pytest -q
+      - name: Validate PowerShell build and installer scripts
+        shell: pwsh
+        run: |
+          $scripts = @(
+            "packaging/build.ps1",
+            "packaging/validate_msix.ps1",
+            "packaging/Install-StartupMessage-Test.ps1"
+          )
+          foreach ($script in $scripts) {
+            $tokens = $null
+            $errorsFound = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path $script).Path, [ref]$tokens, [ref]$errorsFound
+            ) | Out-Null
+            if ($errorsFound.Count -gt 0) {
+              $errorsFound | ForEach-Object { Write-Host $_.ToString() }
+              throw "Erro de sintaxe PowerShell em $script"
+            }
+          }
       - name: Validate MSIX version and release tag
         shell: pwsh
         env:

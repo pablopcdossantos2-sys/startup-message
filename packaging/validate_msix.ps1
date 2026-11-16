@@ -16,11 +16,20 @@ if (-not (Test-Path $certificatePath)) {
 }
 
 $trustedStore = "Cert:\LocalMachine\TrustedPeople"
-$certificate = Import-Certificate -FilePath $certificatePath -CertStoreLocation $trustedStore
+# Nunca substitua/desinstale um aplicativo existente na máquina de quem executar
+# manualmente o teste. O runner do CI começa com uma conta limpa.
+$priorInstallation = Get-AppxPackage -Name $IdentityName | Select-Object -First 1
+if ($priorInstallation) {
+    throw "Já existe uma instalação de $IdentityName. Faça a validação numa conta Windows limpa para preservar dados."
+}
+$certificate = $null
 $installed = $null
 $process = $null
+$runnerSmoke = $null
+$settingsSmoke = $null
 
 try {
+    $certificate = Import-Certificate -FilePath $certificatePath -CertStoreLocation $trustedStore
     Write-Host "==> Instalando pacote MSIX para teste"
     Add-AppxPackage -Path $packagePath -ErrorAction Stop
 
@@ -78,11 +87,27 @@ try {
     }
     Write-Host "MSIX_STARTUP_GUI_SMOKE=PASS"
 
+    Write-Host "==> Testando a janela de configurações empacotada"
+    $settingsSmoke = Start-Process -FilePath $settingsExe -ArgumentList "--settings --gui-smoke-test" -PassThru
+    if (-not $settingsSmoke.WaitForExit(20000)) {
+        Stop-Process -Id $settingsSmoke.Id -Force -ErrorAction SilentlyContinue
+        throw "O teste gráfico das Configurações excedeu 20 segundos."
+    }
+    if ($settingsSmoke.ExitCode -ne 0) {
+        throw "A janela de configurações não iniciou (código $($settingsSmoke.ExitCode))."
+    }
+    Write-Host "MSIX_SETTINGS_GUI_SMOKE=PASS"
+
     Write-Host "MSIX_INSTALL_TEST=PASS"
     Write-Host "MSIX_STARTUP_TASK_MANIFEST=PASS"
     Write-Host "MSIX_PACKAGE_STORAGE_AND_WINRT=PASS"
 }
 finally {
+    foreach ($running in @($runnerSmoke, $settingsSmoke)) {
+        if ($running -and -not $running.HasExited) {
+            Stop-Process -Id $running.Id -Force -ErrorAction SilentlyContinue
+        }
+    }
     if ($process -and -not $process.HasExited) {
         Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
     }
@@ -90,7 +115,7 @@ finally {
         Write-Host "==> Removendo pacote de teste"
         Remove-AppxPackage -Package $installed.PackageFullName -ErrorAction SilentlyContinue
     }
-    if ($certificate.Thumbprint) {
+    if ($certificate -and $certificate.Thumbprint) {
         Remove-Item -Path (Join-Path $trustedStore $certificate.Thumbprint) -Force -ErrorAction SilentlyContinue
     }
 }

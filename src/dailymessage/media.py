@@ -64,7 +64,9 @@ def cleanup(keep: set[str]) -> None:
     if not directory.is_dir():
         return
     for f in directory.iterdir():
-        if f.is_file() and f.name not in keep:
+        # Apague apenas arquivos gerados pelo importador, nunca documentos ou outros
+        # arquivos que alguém tenha guardado na pasta de mídia.
+        if f.is_file() and config.IMAGE_NAME_RE.fullmatch(f.name) and f.name not in keep:
             try:
                 f.unlink()
             except OSError:

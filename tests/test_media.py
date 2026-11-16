@@ -17,8 +17,11 @@ def test_import_resolve_cleanup(tmp_path, monkeypatch):
     assert media.resolve("../evil.png") is None
     assert media.resolve(name + "\\n") is None
     other = media.import_image(src)
+    custom_file = media.media_dir() / "anotacoes.txt"
+    custom_file.write_text("não pertence ao gerenciador de mídia", encoding="utf-8")
     media.cleanup({name})
     assert media.resolve(other) is None and media.resolve(name)
+    assert custom_file.read_text(encoding="utf-8") == "não pertence ao gerenciador de mídia"
 
 
 def test_rejects_invalid_files(tmp_path, monkeypatch):

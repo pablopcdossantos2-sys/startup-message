@@ -552,5 +552,9 @@ class SettingsApp(ctk.CTk):
         self._feedback(tr.t("saved"))
 
 
-def run_settings(cfg: Config) -> None:
-    SettingsApp(cfg).mainloop()
+def run_settings(cfg: Config, *, smoke_test: bool = False) -> None:
+    root = SettingsApp(cfg)
+    if smoke_test:
+        # O teste de integração abre e desenha a janela de Configurações e depois encerra.
+        root.after(1500, root.destroy)
+    root.mainloop()

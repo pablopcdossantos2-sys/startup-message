@@ -101,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
         else:
             from .settings_window import run_settings
 
-            run_settings(cfg)
+            run_settings(cfg, smoke_test="--gui-smoke-test" in argv)
         return 0
     except Exception:
         log.exception("Falha fatal")

@@ -15,7 +15,8 @@ O pipeline para Windows:
 7. confirma que o pacote tem os dois executáveis e que a extensão DailyMessageTask aponta para StartupMessageRunner.exe, desativada por padrão;
 8. executa o modo de diagnóstico dentro da identidade MSIX, consultando a StartupTask e gravando/removendo um arquivo no espaço LocalState;
 9. abre a GUI em modo de inicialização usando `StartupMessage.exe --startup --gui-smoke-test` e confirma que fecha automaticamente. O CI verifica a existência e o manifesto do Runner, mas **não simula o login real do Windows**;
-10. publica um kit de instalação de teste e o MSIX não assinado **como validação apenas**. A arte final e o contato real de suporte ainda precisam ser aprovados antes da Store.
+10. abre a janela real de Configurações com `StartupMessage.exe --settings --gui-smoke-test`, verifica que o processo encerra sem erro e não substitui instalações preexistentes;
+11. publica um kit de instalação de teste e o MSIX não assinado **como validação apenas**. A arte final e o contato real de suporte ainda precisam ser aprovados antes da Store.
 
 A cópia assinada e o certificado temporário servem exclusivamente ao teste automático. Não os envie à Store.
 
