@@ -1,6 +1,6 @@
 # Política de Privacidade — StartupMessage
 
-**Última atualização:** 2026-11-13
+**Última atualização:** 2026-11-15
 
 O StartupMessage **não coleta, transmite nem compartilha nenhum dado pessoal**.
 
