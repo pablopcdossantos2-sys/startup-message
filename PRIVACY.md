@@ -12,4 +12,6 @@ O StartupMessage **não coleta, transmite nem compartilha nenhum dado pessoal**.
 - Um pequeno arquivo de log local (`dailymessage.log`) pode registrar erros técnicos; ele nunca é enviado a ninguém.
 - Para remover tudo, desative "Iniciar junto com o Windows", desinstale o app e apague a pasta local de configurações, se desejar remover os dados restantes.
 
-Contato: SEU-EMAIL@exemplo.com
+Contato e solicitações de privacidade: https://github.com/pablopcdossantos2-sys/startup-message/issues
+
+Para questões privadas, use um canal de contato publicado pelo responsável antes da submissão à Microsoft Store.
