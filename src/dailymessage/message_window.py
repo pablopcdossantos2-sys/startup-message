@@ -299,9 +299,17 @@ class MessageView(ctk.CTkFrame):
         self._apply_native_state()
 
     # ------------------------------------------------------------ estado (tempo + itens)
+    def _watchdog(self) -> None:
+        try:
+            if self.winfo_exists() and not self.time_done:
+                log.error("Watchdog: contador não concluiu no prazo; liberando a janela")
+                self._release_on_failure()
+        except Exception:
+            self._release_on_failure()
+
     def _release_on_failure(self) -> None:
         """Falha aberta: nenhum erro de interface pode prender o usuário."""
-        log.exception("Erro no bloqueio; liberando a janela por segurança")
+        log.error("Erro no bloqueio; liberando a janela por segurança", exc_info=True)
         self.time_done = True
         self.locked = False
         try:
