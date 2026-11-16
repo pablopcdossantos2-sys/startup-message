@@ -98,7 +98,12 @@ def is_packaged() -> bool:
     try:
         length = ctypes.c_uint32(0)
         rc = ctypes.windll.kernel32.GetCurrentPackageFullName(ctypes.byref(length), None)
-        return rc != APPMODEL_ERROR_NO_PACKAGE
+        if rc == APPMODEL_ERROR_NO_PACKAGE:
+            return False
+        if rc in (0, ERROR_INSUFFICIENT_BUFFER):
+            return True
+        log.warning("GetCurrentPackageFullName retornou erro inesperado: %s", rc)
+        return False
     except Exception:
         return False
 
