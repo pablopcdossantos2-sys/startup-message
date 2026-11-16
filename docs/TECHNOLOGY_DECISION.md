@@ -30,6 +30,6 @@ A distribuição segue exclusivamente MSIX. O pipeline Python atual continua:
 - verificando as APIs WinRT usadas pelo mecanismo StartupTask;
 - gerando e instalando a cópia assinada de teste;
 - criando o kit de instalação para teste;
-- publicando um MSIX de validação até que a identidade definitiva do Partner Center esteja cadastrada.
+- publicando o MSIX não assinado como **VALIDATION-ONLY** enquanto a arte final e o contato de suporte não forem aprovados. A identidade do Partner Center já está definida.
 
 Não existe distribuição portátil separada. O pacote com identidade provisória continua proibido para submissão à Microsoft Store.
