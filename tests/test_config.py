@@ -74,6 +74,24 @@ def test_load_handles_winrt_unavailable(monkeypatch):
     assert config.load() == Config()
 
 
+def test_first_run_english_uses_localized_defaults(tmp_path, monkeypatch):
+    from dailymessage import i18n
+    monkeypatch.setattr(config, "config_dir", lambda: tmp_path)
+    monkeypatch.setattr(i18n, "detect_system_language", lambda: "en")
+    cfg = config.load()
+    assert cfg.title == "Welcome!"
+    assert "productive day" in cfg.blocks[0]["text"]
+
+
+def test_existing_content_remains_unchanged_on_english_windows(tmp_path, monkeypatch):
+    from dailymessage import i18n
+    monkeypatch.setattr(config, "config_dir", lambda: tmp_path)
+    monkeypatch.setattr(i18n, "detect_system_language", lambda: "en")
+    saved = config.Config(title="Meu texto", blocks=[{"type": "text", "style": "body", "text": "Olá"}])
+    config.save(saved)
+    assert config.load() == saved
+
+
 def test_load_corrupted_returns_defaults(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "config_dir", lambda: tmp_path)
     (tmp_path / "config.json").write_text("{ not json", encoding="utf-8")
