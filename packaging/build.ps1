@@ -36,6 +36,7 @@ if ($IdentityName -eq "Publisher.StartupMessage" -or $Publisher -eq "CN=Publishe
 
 Write-Host "==> Gerando ícones (placeholders, se ainda não existirem)"
 python packaging/make_assets.py
+if ($LASTEXITCODE -ne 0) { throw "Geração/validação dos ícones falhou" }
 
 Write-Host "==> PyInstaller"
 foreach ($d in "build", "dist", "release") { if (Test-Path $d) { Remove-Item $d -Recurse -Force } }
