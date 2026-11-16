@@ -125,7 +125,7 @@ class Config:
             theme=self.theme if self.theme in THEMES else d.theme,
             accent=self.accent if self.accent in ACCENTS else d.accent,
             language=self.language if self.language in LANGUAGES else d.language,
-            font_family=self.font_family if isinstance(self.font_family, str) and self.font_family.strip()[:80] else d.font_family,
+            font_family=(self.font_family.strip()[:80] if isinstance(self.font_family, str) and self.font_family.strip() else d.font_family),
             font_size=max(MIN_FONT_SIZE, min(MAX_FONT_SIZE, self.font_size if isinstance(self.font_size, int) and not isinstance(self.font_size, bool) else d.font_size)),
         )
 
