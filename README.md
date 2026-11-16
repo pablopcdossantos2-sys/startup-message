@@ -23,7 +23,7 @@ Aplicativo **gratuito, distribuído exclusivamente pela Microsoft Store** para W
 - 🎨 Visual moderno: tema **claro / escuro / sistema**, 4 cores de destaque, cantos arredondados
 - 👀 Botão **Visualizar** para testar antes de salvar
 - 🌎 Português (Brasil) e inglês
-- 🔐 **100% offline** ([Privacidade](PRIVACY.md))
+- 🔐 **Sem transmissão automática de dados** (links de suporte abrem o navegador somente quando clicados; [Privacidade](PRIVACY.md))
 
 ## 📥 Instalação
 
