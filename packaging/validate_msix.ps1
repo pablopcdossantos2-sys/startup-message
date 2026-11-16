@@ -65,6 +65,17 @@ try {
         throw "O teste interno do aplicativo retornou código $($process.ExitCode)."
     }
 
+    Write-Host "==> Testando interface gráfica real do StartupMessageRunner.exe"
+    $runnerSmoke = Start-Process -FilePath $runnerExe -ArgumentList "--gui-smoke-test" -PassThru
+    if (-not $runnerSmoke.WaitForExit(20000)) {
+        Stop-Process -Id $runnerSmoke.Id -Force -ErrorAction SilentlyContinue
+        throw "O teste gráfico do Runner excedeu 20 segundos."
+    }
+    if ($runnerSmoke.ExitCode -ne 0) {
+        throw "O Runner não conseguiu iniciar a interface gráfica (código $($runnerSmoke.ExitCode))."
+    }
+    Write-Host "MSIX_RUNNER_GUI_SMOKE=PASS"
+
     Write-Host "MSIX_INSTALL_TEST=PASS"
     Write-Host "MSIX_STARTUP_TASK_MANIFEST=PASS"
     Write-Host "MSIX_PACKAGE_STORAGE_AND_WINRT=PASS"
