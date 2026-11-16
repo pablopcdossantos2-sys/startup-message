@@ -478,7 +478,8 @@ class SettingsApp(ctk.CTk):
                 if self.winfo_exists():
                     self.after(100, poll)
                 return
-            if self.winfo_exists() and self.auto_switch.winfo_exists():
+            if (self.winfo_exists() and self.auto_switch is switch
+                    and switch.winfo_exists()):
                 self._apply_autostart(status, error=failed)
 
         self.after(100, poll)
