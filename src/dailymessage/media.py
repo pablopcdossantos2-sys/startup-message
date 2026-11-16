@@ -45,7 +45,7 @@ def import_image(src) -> str:
                 im.convert("RGBA").save(directory / name, "PNG")
             else:
                 im.convert("RGB").save(directory / name, "JPEG", quality=90)
-    except (OSError, Image.DecompressionBombError) as exc:
+    except (OSError, Image.DecompressionBombError, Image.DecompressionBombWarning) as exc:
         raise ValueError(str(exc)) from exc
     return name
 
