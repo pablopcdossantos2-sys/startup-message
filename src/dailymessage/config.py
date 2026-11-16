@@ -152,11 +152,28 @@ def config_path() -> Path:
     return config_dir() / "config.json"
 
 
+def first_run_config() -> Config:
+    """Conteúdo inicial acompanha o idioma do Windows, sem modificar dados existentes."""
+    try:
+        from .i18n import detect_system_language
+        if detect_system_language() == "en":
+            return Config(
+                title="Welcome!",
+                blocks=[{"type": "text", "style": "body", "text":
+                    "Have a productive day. Organize your priorities and start calmly."}],
+            )
+    except Exception:
+        log.debug("Não foi possível detectar o idioma inicial", exc_info=True)
+    return Config()
+
+
 def load() -> Config:
     try:
         raw = json.loads(config_path().read_text(encoding="utf-8"))
         if not isinstance(raw, dict):
             raise ValueError("config inválida")
+    except FileNotFoundError:
+        return first_run_config()
     except (OSError, ValueError, ImportError, RuntimeError):
         log.exception("Configuração indisponível; usando valores padrão")
         return Config()
