@@ -24,6 +24,18 @@ jobs:
       - name: Verify WinRT APIs used by the MSIX app
         run: python -c "from winrt.windows.applicationmodel import StartupTask; from winrt.windows.storage import ApplicationData; print('WinRT OK')"
       - run: python -m pytest -q
+      - name: Validate MSIX version and release tag
+        shell: pwsh
+        env:
+          GIT_REF: ${{ github.ref }}
+          GIT_REF_NAME: ${{ github.ref_name }}
+        run: |
+          if ($env:GIT_REF -like "refs/tags/*") {
+            python versioning.py --tag $env:GIT_REF_NAME
+          } else {
+            python versioning.py
+          }
+          if ($LASTEXITCODE -ne 0) { throw "Versionamento MSIX inválido" }
       - name: Build MSIX
         shell: pwsh
         env:
