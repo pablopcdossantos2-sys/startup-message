@@ -12,7 +12,7 @@ O pipeline para Windows:
 4. cria o pacote MSIX;
 5. assina uma cópia separada com certificado temporário;
 6. instala a cópia de teste no Windows;
-7. confirma que o pacote tem os dois executáveis e que a extensão StartupMessageTask aponta para StartupMessageRunner.exe, desativada por padrão;
+7. confirma que o pacote tem os dois executáveis e que a extensão DailyMessageTask aponta para StartupMessageRunner.exe, desativada por padrão;
 8. executa o modo de diagnóstico dentro da identidade MSIX, consultando a StartupTask e gravando/removendo um arquivo no espaço LocalState;
 9. publica como artefato apenas o MSIX não assinado, destinado à submissão à Store.
 
