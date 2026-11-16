@@ -370,7 +370,7 @@ class MessageView(ctk.CTkFrame):
             self.win.destroy()
 
 
-def run_startup_message(cfg: Config, tr: Translator, *, delay_seconds: float = STARTUP_DELAY_SECONDS) -> None:
+def run_startup_message(cfg: Config, tr: Translator, *, delay_seconds: float = STARTUP_DELAY_SECONDS, smoke_test: bool = False) -> None:
     if delay_seconds:
         time.sleep(delay_seconds)
     theme.apply_mode(cfg.theme)
