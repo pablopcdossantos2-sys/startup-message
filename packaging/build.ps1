@@ -19,7 +19,7 @@ Set-Location $root
 function Find-SdkTool([string]$name) {
   $bin = Join-Path ${env:ProgramFiles(x86)} "Windows Kits\10\bin"
   $dirs = Get-ChildItem $bin -Directory -ErrorAction SilentlyContinue |
-          Where-Object Name -Match '^10\.' | Sort-Object Name -Descending
+          Where-Object Name -Match '^10\.' | Sort-Object { [version]$_.Name } -Descending
   foreach ($d in $dirs) {
     $p = Join-Path $d.FullName "x64\$name"
     if (Test-Path $p) { return $p }
