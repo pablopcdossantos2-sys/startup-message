@@ -370,12 +370,22 @@ def run_startup_message(cfg: Config, tr: Translator, *, delay_seconds: float = S
     uiutil.fit_and_center(root, w, h, min_size=MIN_SIZE, fill_height_for_large=True)
     uiutil.apply_icon(root)
     MessageView(root, cfg, tr, seconds=cfg.seconds)
-    from . import tray
-    tray_icon = tray.start()
+    # O ícone é acessório: importação/execução dele nunca pode impedir a mensagem.
+    tray_module = None
+    tray_icon = None
+    try:
+        from . import tray as tray_module
+        tray_icon = tray_module.start()
+    except Exception:
+        log.exception("Falha opcional ao iniciar ícone da bandeja")
     try:
         root.mainloop()
     finally:
-        tray.stop(tray_icon)
+        if tray_module is not None:
+            try:
+                tray_module.stop(tray_icon)
+            except Exception:
+                log.exception("Falha ao encerrar ícone da bandeja")
 
 
 def open_preview(master, cfg: Config, tr: Translator):
