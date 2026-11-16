@@ -65,6 +65,8 @@ STRINGS: dict[str, dict[str, str]] = {
         "err.too_many_blocks": "Limite de {max} blocos atingido.",
         "err.too_many_images": "Limite de {max} imagens atingido.",
         "err.too_long": "O texto excede o limite ({max} caracteres no total).",
+        "err.too_many_items": "Cada checklist aceita no máximo {max} itens.",
+        "err.item_too_long": "Cada item da checklist aceita no máximo {max} caracteres.",
         "err.save": "Não foi possível salvar: {detail}",
         "msg.wait": "Você poderá continuar em",
         "msg.need_items": "O tempo acabou. Marque todos os itens obrigatórios para continuar.",
