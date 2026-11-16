@@ -2,7 +2,7 @@
 
 [![build](https://github.com/pablopcdossantos2-sys/startup-message/actions/workflows/build.yml/badge.svg)](https://github.com/pablopcdossantos2-sys/startup-message/actions/workflows/build.yml)
 ![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4)
-![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 Aplicativo **gratuito, distribuído exclusivamente pela Microsoft Store** para Windows que exibe uma **mensagem personalizada sempre que o computador inicia** — de um simples "Bom dia!" a textos longos, com **imagens** e **checklists interativas**. A mensagem permanece na tela por um **tempo obrigatório definido por você** e só pode ser fechada depois do contador zerar (e, se houver checklist obrigatória, depois de marcar todos os itens).
@@ -58,7 +58,7 @@ Por design — e por exigência das políticas da Microsoft Store — o app **n�
 
 ## 🛠️ Desenvolvimento
 
-Requer **Windows 10/11** e **Python 3.10+** (recomendado 3.12).
+Requer **Windows 10/11** e **Python 3.12** para reproduzir exatamente o ambiente do CI.
 
 ```powershell
 git clone https://github.com/pablopcdossantos2-sys/startup-message.git
