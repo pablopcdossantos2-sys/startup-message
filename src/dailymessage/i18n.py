@@ -9,6 +9,7 @@ STRINGS: dict[str, dict[str, str]] = {
     "pt-BR": {
         "app.name": "StartupMessage",
         "settings.subtitle": "Exiba uma mensagem sempre que o Windows iniciar.",
+        "settings.window_title": "StartupMessage — Configurações",
         "card.content": "Conteúdo da mensagem",
         "content.hint": "Monte a mensagem com blocos de texto, imagens e checklists. A janela se adapta ao tamanho do conteúdo (limite de {max} caracteres de texto no total).",
         "field.title": "Título",
