@@ -107,6 +107,25 @@ def primary_work_area() -> tuple[int, int, int, int] | None:
     return None
 
 
+def activate_existing_settings() -> bool:
+    """Restaura a instância de Configurações em vez de abrir outra janela."""
+    if not IS_WINDOWS:
+        return False
+    try:
+        u = _u32()
+        u.FindWindowW.argtypes = [wintypes.LPCWSTR, wintypes.LPCWSTR]
+        u.FindWindowW.restype = wintypes.HWND
+        for title in ("StartupMessage — Configurações", "StartupMessage — Settings"):
+            hwnd = u.FindWindowW(None, title)
+            if hwnd:
+                u.ShowWindow(hwnd, SW_RESTORE)
+                u.SetForegroundWindow(hwnd)
+                return True
+    except Exception:
+        log.exception("Falha ao restaurar a janela de configurações existente")
+    return False
+
+
 def is_packaged() -> bool:
     """True se rodando como app MSIX (com identidade de pacote)."""
     if not IS_WINDOWS:
