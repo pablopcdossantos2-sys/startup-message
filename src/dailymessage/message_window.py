@@ -42,6 +42,7 @@ class MessageView(ctk.CTkFrame):
         self.total = max(1, int(seconds))
         self.locked = True
         self.time_done = False
+        self._emergency_released = False
         self.vars: list[ctk.BooleanVar] = []  # itens de checklists obrigatórias
         self._wrap: list[tuple[ctk.CTkLabel, int]] = []
         self._imgs: list[tuple[Image.Image, ctk.CTkImage]] = []
@@ -287,6 +288,9 @@ class MessageView(ctk.CTkFrame):
             pass
 
     def _set_locked(self, locked: bool) -> None:
+        # Liberação de emergência é irreversível durante esta janela.
+        if self._emergency_released:
+            return
         if locked == self.locked:
             return
         self.locked = locked
@@ -308,23 +312,50 @@ class MessageView(ctk.CTkFrame):
             self._release_on_failure()
 
     def _release_on_failure(self) -> None:
-        """Falha aberta: nenhum erro de interface pode prender o usuário."""
-        log.error("Erro no bloqueio; liberando a janela por segurança", exc_info=True)
+        """Falha aberta permanente: nunca exigir novamente temporizador/checklist."""
+        if self._emergency_released:
+            return
+        log.error("Erro no bloqueio; encerrando restrições por segurança", exc_info=True)
+        self._emergency_released = True
         self.time_done = True
         self.locked = False
+        closing_failed = False
+
+        # Uma falha isolada de widget não deve impedir de restaurar o X nativo.
         try:
             self.ok.configure(state="normal", fg_color=self.accent,
                               hover_color=self.accent_hover, text_color=theme.ON_ACCENT)
+        except Exception:
+            log.exception("Não foi possível habilitar o botão OK")
+            closing_failed = True
+        try:
             self.win.protocol("WM_DELETE_WINDOW", self.win.destroy)
+        except Exception:
+            log.exception("Não foi possível restaurar o botão de fechamento")
+            closing_failed = True
+        try:
             self.win.attributes("-topmost", False)
-            if winapi.IS_WINDOWS:
+        except Exception:
+            log.warning("Não foi possível remover a prioridade da janela", exc_info=True)
+        if winapi.IS_WINDOWS:
+            try:
                 hwnd = winapi.toplevel_hwnd(self.win)
                 winapi.set_close_enabled(hwnd, enabled=True)
                 winapi.set_caption_boxes(hwnd, minimize=True, maximize=True)
-        except Exception:
-            log.exception("Não foi possível restaurar todos os controles da janela")
+            except Exception:
+                log.exception("Não foi possível restaurar os botões nativos")
+                closing_failed = True
+        if closing_failed:
+            # Melhor encerrar a janela do que manter a pessoa presa em um boot.
+            try:
+                self.win.destroy()
+            except Exception:
+                log.exception("Falha ao fechar janela após erro crítico")
+
 
     def _refresh(self) -> None:
+        if self._emergency_released:
+            return
         try:
             total = len(self.vars)
             done = sum(1 for v in self.vars if v.get())
@@ -346,6 +377,8 @@ class MessageView(ctk.CTkFrame):
             self._release_on_failure()
 
     def _tick(self) -> None:
+        if self._emergency_released:
+            return
         try:
             if not self.winfo_exists():
                 return

@@ -53,6 +53,8 @@ Observação: o usuário precisa abrir o aplicativo pelo menos uma vez para regi
 - [ ] Marcar todos os itens; confirmar liberação.
 - [ ] Desmarcar um item; confirmar que o bloqueio volta.
 - [ ] Confirmar que checklist não obrigatória não bloqueia a saída.
+- [ ] Em uma versão de teste instrumentada, simular falha do temporizador e confirmar que a janela se libera definitivamente, mesmo após clicar em itens de checklist.
+- [ ] Confirmar que uma falha ao reabilitar o botão OK provoca encerramento seguro da janela em vez de bloqueio permanente.
 
 ### 4. Texto, imagens e dimensões
 
