@@ -5,6 +5,8 @@ import copy
 import dataclasses
 import logging
 import os
+import queue
+import threading
 import webbrowser
 from tkinter import filedialog, font as tkfont
 
@@ -217,7 +219,7 @@ class SettingsApp(ctk.CTk):
             body, text=tr.t("autostart.open_settings"), height=34, corner_radius=10,
             fg_color=theme.SURFACE_ALT, hover_color=theme.BORDER, text_color=theme.TEXT,
             command=lambda: os.startfile("ms-settings:startupapps"))
-        self._apply_autostart(autostart.get_status())
+        self._refresh_autostart_async()
 
         about = self._muted(scroll, tr.t("footer.about", v=__version__), 12)
         about.pack(anchor="w", padx=4, pady=(4, 16))
@@ -443,13 +445,46 @@ class SettingsApp(ctk.CTk):
         else:
             self.auto_open.pack_forget()
 
+    def _autostart_operation(self, operation) -> None:
+        """Executa WinRT fora do loop Tk e consulta o resultado no próprio loop."""
+        switch = self.auto_switch
+        switch.configure(state="disabled")
+        result = queue.Queue(maxsize=1)
+
+        def worker() -> None:
+            try:
+                status = operation()
+                result.put((status, False))
+            except Exception:
+                log.exception("Falha ao consultar/alterar a inicialização automática")
+                try:
+                    # O diálogo do Windows pode terminar depois do timeout:
+                    # reconsulta o estado em vez de assumir desativação.
+                    status = autostart.get_status()
+                except Exception:
+                    status = autostart.Status(False, False, "autostart.error")
+                result.put((status, True))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+        def poll() -> None:
+            try:
+                status, failed = result.get_nowait()
+            except queue.Empty:
+                if self.winfo_exists():
+                    self.after(100, poll)
+                return
+            if self.winfo_exists() and self.auto_switch.winfo_exists():
+                self._apply_autostart(status, error=failed)
+
+        self.after(100, poll)
+
+    def _refresh_autostart_async(self) -> None:
+        self._autostart_operation(autostart.get_status)
+
     def _on_autostart(self) -> None:
         want = bool(self.auto_switch.get())
-        try:
-            self._apply_autostart(autostart.set_enabled(want))
-        except Exception:
-            log.exception("Falha ao alterar a inicialização automática")
-            self._apply_autostart(autostart.get_status(), error=True)
+        self._autostart_operation(lambda: autostart.set_enabled(want))
 
     def _collect_draft(self) -> None:
         self.cfg.title = self.title_entry.get().strip()[:MAX_TITLE_LEN]
