@@ -74,16 +74,23 @@ New-Item -ItemType Directory -Force $release | Out-Null
     $cert = New-SelfSignedCertificate -Type Custom -Subject $Publisher -KeyUsage DigitalSignature `
       -FriendlyName "StartupMessage Test" -CertStoreLocation "Cert:\CurrentUser\My" `
       -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
-    $pfx = Join-Path $release "StartupMessage-test.pfx"
-    $cer = Join-Path $release "StartupMessage-test.cer"
-    Export-PfxCertificate -Cert $cert -FilePath $pfx -Password (ConvertTo-SecureString "test1234" -AsPlainText -Force) | Out-Null
-    Export-Certificate -Cert $cert -FilePath $cer | Out-Null
-    $testOut = Join-Path $release "StartupMessage-validation.msix"
-    Copy-Item $out $testOut -Force
-    & $signtool sign /fd SHA256 /f $pfx /p test1234 $testOut
-    if ($LASTEXITCODE -ne 0) { throw "Assinatura de teste falhou" }
-    # A verificação da confiança ocorre no teste de instalação, após importar o certificado em TrustedPeople.
-    Write-Host "   Pacote de validação assinado: $testOut"
-    Write-Host "   Pacote de envio à Store (não assinado): $out"
+    try {
+      $pfx = Join-Path $release "StartupMessage-test.pfx"
+      $cer = Join-Path $release "StartupMessage-test.cer"
+      Export-PfxCertificate -Cert $cert -FilePath $pfx -Password (ConvertTo-SecureString "test1234" -AsPlainText -Force) | Out-Null
+      Export-Certificate -Cert $cert -FilePath $cer | Out-Null
+      $testOut = Join-Path $release "StartupMessage-validation.msix"
+      Copy-Item $out $testOut -Force
+      & $signtool sign /fd SHA256 /f $pfx /p test1234 $testOut
+      if ($LASTEXITCODE -ne 0) { throw "Assinatura de teste falhou" }
+      # A verificação da confiança ocorre no teste de instalação, após importar o certificado em TrustedPeople.
+      Write-Host "   Pacote de validação assinado: $testOut"
+      Write-Host "   Pacote não assinado, somente para validação técnica: $out"
+    }
+    finally {
+      if ($cert -and $cert.Thumbprint) {
+        Remove-Item "Cert:\\CurrentUser\\My\\$($cert.Thumbprint)" -Force -ErrorAction SilentlyContinue
+      }
+    }
   }
 Write-Host "==> Pacote MSIX concluído."
