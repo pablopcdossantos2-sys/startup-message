@@ -157,7 +157,8 @@ def load() -> Config:
         raw = json.loads(config_path().read_text(encoding="utf-8"))
         if not isinstance(raw, dict):
             raise ValueError("config inválida")
-    except (OSError, ValueError):
+    except (OSError, ValueError, ImportError, RuntimeError):
+        log.exception("Configuração indisponível; usando valores padrão")
         return Config()
     if "blocks" not in raw and isinstance(raw.get("message"), str):  # formato antigo
         raw["blocks"] = [{"type": "text", "style": "body", "text": raw["message"]}]
