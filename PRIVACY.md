@@ -1,6 +1,6 @@
 # Política de Privacidade — StartupMessage
 
-**Última atualização:** 2026-11-15
+**Última atualização:** 2026-11-17
 
 O StartupMessage **não coleta, transmite nem compartilha nenhum dado pessoal**.
 
@@ -9,6 +9,8 @@ O StartupMessage **não coleta, transmite nem compartilha nenhum dado pessoal**.
   (na área `LocalState` privada do pacote MSIX; durante o desenvolvimento, em `%LOCALAPPDATA%\DailyMessage\config.json`).
 - As **imagens** que você adiciona são **copiadas** para a pasta local `media` (junto das configurações) e
   nunca saem do seu computador. As marcações das checklists não são salvas.
+- Os blocos **Digitar novamente** (lista de regras ou texto longo) guardam apenas o **conteúdo de referência** na configuração local. As respostas digitadas na mensagem inicial são mantidas somente enquanto a janela está aberta: **não são gravadas em disco, histórico ou logs**. A cada novo login, os campos de transcrição começam vazios.
+- Os campos de transcrição restringem as funções usuais de colar; o aplicativo não lê o conteúdo da área de transferência para conferir as respostas.
 - Um pequeno arquivo de log local (`dailymessage.log`) pode registrar erros técnicos; ele nunca é enviado a ninguém.
 - Para remover tudo, desative "Iniciar junto com o Windows", desinstale o app e apague a pasta local de configurações, se desejar remover os dados restantes.
 
