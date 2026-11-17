@@ -16,7 +16,10 @@ PASTE_EVENTS = (
     "<Control-Shift-KeyPress-v>",
     "<Control-Shift-KeyPress-V>",
     "<Shift-KeyPress-Insert>",
-    "<Button-2>",
+    "<Shift-KeyPress-F10>",  # Menu de contexto pelo teclado.
+    "<KeyPress-Menu>",  # Tecla de menu contextual do Windows.
+    "<Button-2>",  # Colagem por seleção primária.
+    "<Button-3>",  # Evita menu de contexto com opção Colar.
 )
 
 
