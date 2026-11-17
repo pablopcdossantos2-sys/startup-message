@@ -18,3 +18,13 @@ def test_image_widens_and_checklist_grows():
 def test_larger_font_increases_estimated_height():
     blocks = [{"type": "text", "style": "body", "text": "Uma mensagem longa " * 100}]
     assert estimate_size(blocks, 28)[1] > estimate_size(blocks, 16)[1]
+
+
+def test_retype_blocks_expand_height_and_width():
+    rules = {"type": "retype_rules", "title": "Regras", "items": ["regra 1", "regra 2", "regra 3"]}
+    text = {"type": "retype_text", "title": "Compromisso", "text": "Eu assumo.\nEu confirmo."}
+    rules_size = estimate_size([rules])
+    text_size = estimate_size([text])
+    assert rules_size[0] > BASE_W and rules_size[1] > BASE_H + 200
+    assert text_size[0] > BASE_W and text_size[1] > BASE_H + 300
+    assert estimate_size([rules, text])[1] > max(rules_size[1], text_size[1])

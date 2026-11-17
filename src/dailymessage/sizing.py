@@ -17,6 +17,17 @@ def estimate_size(blocks: list[dict], font_size: int = 16) -> tuple[int, int]:
             per_line = max(20, int((55 if heading else 75) / font_scale))
             lines = sum(max(1, math.ceil(len(p) / per_line)) for p in b["text"].split("\n"))
             h += int(lines * (32 if heading else 26) * font_scale) + 16
+        elif kind == "retype_rules":
+            w = max(w, 740)
+            for rule in b["items"]:
+                lines = math.ceil(len(rule) / max(20, int(65 / font_scale)))
+                h += int((76 + lines * 26) * font_scale)
+            h += 90
+        elif kind == "retype_text":
+            w = max(w, 740)
+            lines = sum(max(1, math.ceil(len(p) / max(20, int(65 / font_scale))))
+                        for p in b["text"].split("\n"))
+            h += int(lines * 26 * font_scale) + 300
         elif kind == "image":
             w = max(w, 780)
             h += 340

@@ -19,7 +19,9 @@ class FakeMessageView:
         self.bar = BrokenLabel()
         self.clock = BrokenLabel()
         self.vars = []
+        self._typing = []
         self.items_label = None
+        self.typing_label = None
         self.released = False
 
     def winfo_exists(self):
@@ -125,3 +127,96 @@ def test_emergency_release_closes_window_if_button_cannot_be_restored(monkeypatc
     assert view.win.destroyed
     assert view._emergency_released
     assert not view.locked
+
+
+
+class RecordingLabel:
+    def __init__(self):
+        self.text = ""
+
+    def configure(self, **kwargs):
+        self.text = kwargs.get("text", self.text)
+
+
+class SimpleTranslator:
+    def t(self, key, **kwargs):
+        return key.format(**kwargs) if kwargs else key
+
+
+def test_typing_only_cannot_unlock_until_timer_and_all_exact_answers():
+    from dailymessage import retype
+
+    class View:
+        def __init__(self):
+            self.time_done = False
+            self._emergency_released = False
+            self.locked = True
+            self.vars = []
+            self.items_label = None
+            self.typing_label = RecordingLabel()
+            self.status = RecordingLabel()
+            self.tr = SimpleTranslator()
+            self.accent = "accent"
+            self.answers = ["", ""]
+            self._typing = [
+                (lambda i=i: self.answers[i], value, RecordingLabel())
+                for i, value in enumerate(["Regra de ouro", "Texto\ncompleto"])
+            ]
+            self.states = []
+
+        def _set_locked(self, value):
+            self.locked = value
+            self.states.append(value)
+
+        def _release_on_failure(self):
+            raise AssertionError("A transcrição não pode cair no watchdog")
+
+    view = View()
+    MessageView._refresh(view)
+    assert view.locked
+    view.answers = ["Regra de ouro", "Texto\ncompleto"]
+    MessageView._refresh(view)
+    assert view.locked  # Tempo continua obrigatório.
+    view.time_done = True
+    MessageView._refresh(view)
+    assert not view.locked
+    assert view.typing_label.text == "msg.typing_progress"
+    view.answers[0] = "Regra de Ouro"
+    MessageView._refresh(view)
+    assert view.locked  # Alterar uma letra depois da confirmação revoga a liberação.
+
+
+def test_retyping_and_checklist_are_both_mandatory():
+    class Checkbox:
+        def __init__(self):
+            self.checked = False
+        def get(self):
+            return self.checked
+
+    class View:
+        def __init__(self):
+            self.time_done = True
+            self._emergency_released = False
+            self.locked = True
+            self.vars = [Checkbox()]
+            self.items_label = RecordingLabel()
+            self.typing_label = RecordingLabel()
+            self.status = RecordingLabel()
+            self.tr = SimpleTranslator()
+            self.accent = "accent"
+            self.answer = "regra"
+            self._typing = [(lambda: self.answer, "regra", RecordingLabel())]
+        def _set_locked(self, state):
+            self.locked = state
+        def _release_on_failure(self):
+            raise AssertionError("Não deveria falhar")
+
+    view = View()
+    MessageView._refresh(view)
+    assert view.locked
+    view.vars[0].checked = True
+    MessageView._refresh(view)
+    assert not view.locked
+    view.answer = ""
+    MessageView._refresh(view)
+    assert view.locked

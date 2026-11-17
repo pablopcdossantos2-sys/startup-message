@@ -1,6 +1,7 @@
-"""Janela da mensagem: flexível, com rolagem, imagens, checklists e trava por tempo + itens."""
+"""Janela da mensagem: texto, imagens, checklist e transcrições exigidas por tempo."""
 from __future__ import annotations
 
+import dataclasses
 import logging
 import math
 import time
@@ -8,7 +9,7 @@ import time
 import customtkinter as ctk
 from PIL import Image
 
-from . import media, theme, uiutil, winapi
+from . import media, retype, theme, uiutil, winapi
 from .config import Config
 from .i18n import Translator
 from .sizing import estimate_size
@@ -44,6 +45,7 @@ class MessageView(ctk.CTkFrame):
         self.time_done = False
         self._emergency_released = False
         self.vars: list[ctk.BooleanVar] = []  # itens de checklists obrigatórias
+        self._typing: list[tuple[object, str, ctk.CTkLabel]] = []  # leitor, texto-alvo, estado
         self._wrap: list[tuple[ctk.CTkLabel, int]] = []
         self._imgs: list[tuple[Image.Image, ctk.CTkImage]] = []
         self._shown: int | None = None
@@ -53,7 +55,12 @@ class MessageView(ctk.CTkFrame):
         self._off_bg = theme.mix(self.accent, theme.SURFACE, 0.72)  # Ok "opaco"
         self.pack(fill="both", expand=True)
         self._build()
-        self._install_lock()
+        if self.preview:
+            # Prévia nunca pode prender o autor: X e botão de saída ficam livres.
+            self.win.protocol("WM_DELETE_WINDOW", self.win.destroy)
+            self.win.bind("<Configure>", self._schedule_relayout, add="+")
+        else:
+            self._install_lock()
         self._refresh()
         self._end = time.monotonic() + self.total
         self._tick()
@@ -100,7 +107,8 @@ class MessageView(ctk.CTkFrame):
         self.scroll.grid(row=1, column=0, sticky="nsew", padx=(PAD - 6, PAD - 18), pady=2)
         for block in self.cfg.blocks:
             {"text": self._add_text, "image": self._add_image,
-             "checklist": self._add_checklist}[block["type"]](block)
+             "checklist": self._add_checklist, "retype_rules": self._add_retype_rules,
+             "retype_text": self._add_retype_text}[block["type"]](block)
 
         ctk.CTkFrame(card, height=1, fg_color=theme.BORDER).grid(
             row=2, column=0, sticky="ew", padx=PAD
@@ -129,6 +137,12 @@ class MessageView(ctk.CTkFrame):
                 foot, text="", font=theme.font(13), text_color=theme.MUTED, anchor="w"
             )
             self.items_label.grid(row=2, column=0, columnspan=2, sticky="w", pady=(8, 0))
+        self.typing_label = None
+        if self._typing:
+            self.typing_label = ctk.CTkLabel(
+                foot, text="", font=theme.font(13), text_color=theme.MUTED, anchor="w"
+            )
+            self.typing_label.grid(row=3, column=0, columnspan=2, sticky="w", pady=(6, 0))
 
         self.ok = ctk.CTkButton(
             card, text=tr.t("msg.ok"), width=180, height=46, corner_radius=14,
@@ -140,7 +154,13 @@ class MessageView(ctk.CTkFrame):
             ctk.CTkLabel(
                 card, text=tr.t("msg.preview_note", s=min(self.total, PREVIEW_MAX_SECONDS)),
                 font=theme.font(12), text_color=theme.MUTED,
-            ).grid(row=5, column=0, pady=(0, 16))
+            ).grid(row=5, column=0, pady=(0, 6))
+            ctk.CTkButton(
+                card, text=tr.t("msg.close_preview"), command=self.win.destroy,
+                height=36, width=180, corner_radius=10, fg_color="transparent",
+                border_width=1, border_color=theme.BORDER, text_color=theme.TEXT,
+                hover_color=theme.SURFACE_ALT,
+            ).grid(row=6, column=0, pady=(0, 16))
 
     # ------------------------------------------------------------ blocos
     def _add_text(self, b: dict) -> None:
@@ -210,6 +230,86 @@ class MessageView(ctk.CTkFrame):
                 self.vars.append(var)
         ctk.CTkFrame(box, height=8, fg_color="transparent").pack()
 
+    # ------------------------------------------------------------ transcrições obrigatórias
+    def _watch_typing(self, widget) -> None:
+        """Só permite resposta digitada; recalcula conclusão após cada alteração de tecla."""
+        retype.prevent_paste(widget)
+        widget.bind("<KeyRelease>", lambda _event: self.after_idle(self._refresh), add="+")
+        widget.bind("<FocusOut>", lambda _event: self.after_idle(self._refresh), add="+")
+
+    def _retype_card(self, title: str):
+        frame = ctk.CTkFrame(
+            self.scroll, fg_color=theme.SURFACE_ALT, corner_radius=14,
+            border_width=1, border_color=theme.BORDER,
+        )
+        frame.pack(fill="x", padx=(2, 8), pady=(0, 14))
+        lbl = ctk.CTkLabel(
+            frame, text=title, font=theme.font(self.cfg.font_size, "bold", self.cfg.font_family),
+            text_color=theme.TEXT, anchor="w", justify="left", wraplength=430,
+        )
+        lbl.pack(fill="x", padx=16, pady=(14, 6))
+        self._wrap.append((lbl, 42))
+        help_label = ctk.CTkLabel(
+            frame, text=self.tr.t("msg.retype_instruction"), font=theme.font(12),
+            text_color=theme.MUTED, anchor="w", justify="left", wraplength=430,
+        )
+        help_label.pack(fill="x", padx=16, pady=(0, 12))
+        self._wrap.append((help_label, 42))
+        return frame
+
+    def _add_retype_rules(self, block: dict) -> None:
+        title = block["title"] or self.tr.t("msg.retype_rules.title")
+        frame = self._retype_card(title)
+        for index, item in enumerate(block["items"], 1):
+            row = ctk.CTkFrame(frame, fg_color="transparent")
+            row.pack(fill="x", padx=16, pady=(0, 14))
+            prompt = ctk.CTkLabel(
+                row, text=f"{index}. {item}",
+                font=theme.font(self.cfg.font_size, family=self.cfg.font_family),
+                text_color=theme.TEXT, anchor="w", justify="left", wraplength=400,
+            )
+            prompt.pack(fill="x", pady=(0, 5))
+            self._wrap.append((prompt, 42))
+            answer_row = ctk.CTkFrame(row, fg_color="transparent")
+            answer_row.pack(fill="x")
+            entry = ctk.CTkEntry(
+                answer_row, height=40, corner_radius=10,
+                font=theme.font(self.cfg.font_size, family=self.cfg.font_family),
+                placeholder_text=self.tr.t("msg.retype_placeholder"),
+                fg_color=theme.SURFACE, border_color=theme.BORDER, text_color=theme.TEXT,
+            )
+            entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
+            indicator = ctk.CTkLabel(
+                answer_row, text=self.tr.t("msg.retype_pending"), width=70,
+                font=theme.font(12), text_color=theme.MUTED,
+            )
+            indicator.pack(side="right")
+            self._typing.append((entry.get, item, indicator))
+            self._watch_typing(entry)
+
+    def _add_retype_text(self, block: dict) -> None:
+        title = block["title"] or self.tr.t("msg.retype_text.title")
+        frame = self._retype_card(title)
+        reference = ctk.CTkLabel(
+            frame, text=block["text"], font=theme.font(self.cfg.font_size, family=self.cfg.font_family),
+            text_color=theme.TEXT, anchor="w", justify="left", wraplength=400,
+        )
+        reference.pack(fill="x", padx=16, pady=(0, 12))
+        self._wrap.append((reference, 42))
+        editor = ctk.CTkTextbox(
+            frame, height=190, corner_radius=10, font=theme.font(self.cfg.font_size, family=self.cfg.font_family),
+            border_width=1, wrap="word",
+            fg_color=theme.SURFACE, border_color=theme.BORDER, text_color=theme.TEXT,
+        )
+        editor.pack(fill="x", padx=16, pady=(0, 6))
+        indicator = ctk.CTkLabel(
+            frame, text=self.tr.t("msg.retype_pending"), font=theme.font(12),
+            text_color=theme.MUTED, anchor="w",
+        )
+        indicator.pack(anchor="w", padx=16, pady=(0, 12))
+        self._typing.append((lambda field=editor: field.get("1.0", "end-1c"), block["text"], indicator))
+        self._watch_typing(editor)
+
     # ------------------------------------------------------------ layout responsivo
     def _schedule_relayout(self, event=None) -> None:
         if event is not None and event.widget is not self.win:
@@ -252,7 +352,9 @@ class MessageView(ctk.CTkFrame):
         w.attributes("-topmost", True)
         w.bind("<Unmap>", self._on_unmap, add="+")
         w.bind("<Configure>", self._schedule_relayout, add="+")
-        w.bind("<Return>", lambda _e: self._close(), add="+")
+        # Enter é necessário para editar textos de transcrição com várias linhas.
+        if not self._typing:
+            w.bind("<Return>", lambda _e: self._close(), add="+")
         w.after(350, self._apply_native_state)  # depois do ajuste de título do CustomTkinter
         w.after(700, self._apply_native_state)
         w.lift()
@@ -300,7 +402,8 @@ class MessageView(ctk.CTkFrame):
             self.ok.configure(state="normal", fg_color=self.accent,
                               hover_color=self.accent_hover, text_color=theme.ON_ACCENT)
             self.ok.focus_set()
-        self._apply_native_state()
+        if not self.preview:
+            self._apply_native_state()
 
     # ------------------------------------------------------------ estado (tempo + itens)
     def _watchdog(self) -> None:
@@ -360,6 +463,21 @@ class MessageView(ctk.CTkFrame):
             total = len(self.vars)
             done = sum(1 for v in self.vars if v.get())
             items_ok = done == total
+            typing_total = len(self._typing)
+            typing_done = 0
+            for read, expected, indicator in self._typing:
+                correct = retype.matches(expected, read())
+                typing_done += int(correct)
+                indicator.configure(
+                    text=self.tr.t("msg.retype_complete" if correct else "msg.retype_pending"),
+                    text_color=theme.SUCCESS if correct else theme.MUTED,
+                )
+            typing_ok = typing_done == typing_total
+            if self.typing_label is not None:
+                self.typing_label.configure(
+                    text=self.tr.t("msg.typing_progress", done=typing_done, total=typing_total),
+                    text_color=theme.SUCCESS if typing_ok else theme.MUTED,
+                )
             if self.items_label is not None:
                 self.items_label.configure(
                     text=self.tr.t("msg.items_progress", done=done, total=total),
@@ -367,12 +485,16 @@ class MessageView(ctk.CTkFrame):
                 )
             if not self.time_done:
                 text, color = self.tr.t("msg.wait"), theme.MUTED
+            elif not items_ok and not typing_ok:
+                text, color = self.tr.t("msg.need_requirements"), self.accent
             elif not items_ok:
                 text, color = self.tr.t("msg.need_items"), self.accent
+            elif not typing_ok:
+                text, color = self.tr.t("msg.need_typing"), self.accent
             else:
                 text, color = self.tr.t("msg.ready"), theme.SUCCESS
             self.status.configure(text=text, text_color=color)
-            self._set_locked(not (self.time_done and items_ok))
+            self._set_locked(not (self.time_done and items_ok and typing_ok))
         except Exception:
             self._release_on_failure()
 
@@ -406,6 +528,13 @@ class MessageView(ctk.CTkFrame):
 def run_startup_message(cfg: Config, tr: Translator, *, delay_seconds: float = STARTUP_DELAY_SECONDS, smoke_test: bool = False) -> None:
     if delay_seconds:
         time.sleep(delay_seconds)
+    if smoke_test:
+        # Testa os widgets de transcrição mesmo com a configuração padrão vazia de exercícios.
+        fixture = [
+            {"type": "retype_rules", "title": "Regras", "items": ["Ler com atenção", "Seguir o plano"]},
+            {"type": "retype_text", "title": "Compromisso", "text": "Exemplo de texto.\\nSegunda linha."},
+        ]
+        cfg = dataclasses.replace(cfg, blocks=cfg.blocks + fixture).sanitized()
     theme.apply_mode(cfg.theme)
     root = ctk.CTk(fg_color=theme.BG)
     root.title(tr.t("app.name"))
