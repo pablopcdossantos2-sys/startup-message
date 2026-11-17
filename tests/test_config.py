@@ -103,3 +103,59 @@ def test_migrates_old_message_field(tmp_path, monkeypatch):
     (tmp_path / "config.json").write_text(json.dumps({"message": "Olá", "seconds": 5}), encoding="utf-8")
     cfg = config.load()
     assert cfg.blocks[0]["text"] == "Olá" and cfg.seconds == 5
+
+
+def test_retype_blocks_roundtrip_and_legacy_backwards_compatibility(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "config_dir", lambda: tmp_path)
+    rules = config.new_block("retype_rules")
+    rules.update(title="Regras diárias", items=["Respeitar meus limites", "Planejar antes de executar"])
+    long_text = config.new_block("retype_text")
+    long_text.update(title="Compromisso", text="Prometo agir com disciplina.\nNão improvisar.")
+    previous = {"type": "checklist", "title": "Rotina", "items": ["Beber água"], "required": True}
+    cfg = Config(blocks=[previous, rules, long_text])
+    config.save(cfg)
+    loaded = config.load()
+    assert loaded.blocks == cfg.blocks
+    assert len(loaded.blocks) == 3
+
+
+def test_invalid_retype_blocks_are_dropped():
+    assert config.sanitize_blocks([
+        {"type": "retype_rules", "items": []},
+        {"type": "retype_rules", "items": "not-a-list"},
+        {"type": "retype_text", "text": "  "},
+        {"type": "retype_rules", "title": "  Regras  ", "items": [" regra  ", "", 10]},
+        {"type": "retype_text", "title": "  Texto  ", "text": " linha 1\nlinha 2  "},
+    ]) == [
+        {"type": "retype_rules", "title": "Regras", "items": ["regra"]},
+        {"type": "retype_text", "title": "Texto", "text": "linha 1\nlinha 2"},
+    ]
+
+
+def test_limits_cover_all_required_transcriptions():
+    assert config.text_too_long([{"type": "retype_text", "text": "x" * (MAX_TEXT_LEN + 1)}])
+    assert config.text_too_long([
+        {"type": "text", "text": "x" * MAX_TEXT_LEN},
+        {"type": "retype_text", "text": "a" * (MAX_TOTAL_TEXT - MAX_TEXT_LEN)},
+        {"type": "retype_rules", "items": ["r"]},
+    ])
+    raw = [
+        {"type": "retype_text", "text": "x" * MAX_TEXT_LEN},
+        {"type": "retype_rules", "items": ["q" * 200] * 30},
+        {"type": "retype_text", "text": "y" * MAX_TEXT_LEN},
+    ]
+    actual = config.sanitize_blocks(raw)
+    total = sum(
+        len(block["text"]) if block["type"] == "retype_text" else sum(map(len, block["items"]))
+        for block in actual
+    )
+    assert total <= MAX_TOTAL_TEXT
+    assert len(actual[1]["items"]) <= config.MAX_ITEMS
+
+
+def test_retype_budget_does_not_erase_saved_ordinary_text():
+    original = [
+        {"type": "text", "style": "body", "text": "Introdução"},
+        {"type": "retype_rules", "title": "", "items": ["Regra um", "Regra dois"]},
+    ]
+    assert config.sanitize_blocks(original) == original

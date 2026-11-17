@@ -39,6 +39,10 @@ def new_block(kind: str) -> dict:
         return {"type": "image", "file": "", "caption": ""}
     if kind == "checklist":
         return {"type": "checklist", "title": "", "items": [], "required": True}
+    if kind == "retype_rules":
+        return {"type": "retype_rules", "title": "", "items": []}
+    if kind == "retype_text":
+        return {"type": "retype_text", "title": "", "text": ""}
     raise ValueError(f"tipo de bloco desconhecido: {kind}")
 
 
@@ -70,6 +74,28 @@ def sanitize_blocks(raw) -> list[dict]:
             style = b.get("style")
             out.append({"type": "text", "style": style if style in TEXT_STYLES else "body",
                         "text": text})
+        elif kind == "retype_text":
+            text = _clip(b.get("text"), min(MAX_TEXT_LEN, budget))
+            if not text:
+                continue
+            budget -= len(text)
+            out.append({"type": "retype_text", "title": _clip(b.get("title"), MAX_LIST_TITLE_LEN),
+                        "text": text})
+        elif kind == "retype_rules":
+            raw_items = b.get("items")
+            if not isinstance(raw_items, list) or budget <= 0:
+                continue
+            items: list[str] = []
+            for item in raw_items:
+                if len(items) >= MAX_ITEMS or budget <= 0:
+                    break
+                text = _clip(item, min(MAX_ITEM_LEN, budget))
+                if text:
+                    items.append(text)
+                    budget -= len(text)
+            if items:
+                out.append({"type": "retype_rules",
+                            "title": _clip(b.get("title"), MAX_LIST_TITLE_LEN), "items": items})
         elif kind == "image":
             name = b.get("file")
             if not (isinstance(name, str) and IMAGE_NAME_RE.fullmatch(name)) or images >= MAX_IMAGES:
@@ -92,8 +118,21 @@ def sanitize_blocks(raw) -> list[dict]:
 
 
 def text_too_long(blocks: list[dict]) -> bool:
-    lengths = [len(str(b.get("text", "")).strip()) for b in blocks if b.get("type") == "text"]
-    return any(n > MAX_TEXT_LEN for n in lengths) or sum(lengths) > MAX_TOTAL_TEXT
+    """Orçamento único para textos comuns e conteúdos de transcrição obrigatória."""
+    lengths = []
+    long_texts = []
+    for block in blocks:
+        if not isinstance(block, dict):
+            continue
+        kind = block.get("type")
+        if kind in ("text", "retype_text"):
+            size = len(str(block.get("text", "")).strip())
+            lengths.append(size)
+            long_texts.append(size)
+        elif kind == "retype_rules":
+            lengths.extend(len(str(item).strip()) for item in block.get("items", [])
+                           if isinstance(item, str))
+    return any(size > MAX_TEXT_LEN for size in long_texts) or sum(lengths) > MAX_TOTAL_TEXT
 
 
 def used_media(blocks: list[dict]) -> set[str]:
