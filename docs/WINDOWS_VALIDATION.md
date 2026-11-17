@@ -33,7 +33,8 @@ Para validar o kit de testes, abra a execução mais recente aprovada de [GitHub
 - [ ] Abrir uma segunda vez o ícone do StartupMessage; confirmar que a janela existente vem para frente e permanece maximizada.
 - [ ] Confirmar que a janela abre maximizada, sem encobrir indevidamente a barra de tarefas.
 - [ ] Confirmar que a janela de configurações abre sem console ou erro.
-- [ ] Adicionar blocos de texto, imagem e checklist.
+- [ ] Adicionar blocos de texto, imagem, checklist, **Digitar novamente — Regras** e **Digitar novamente — Texto longo**.
+- [ ] Cadastrar duas regras diferentes e um texto com dois parágrafos; salvar, reabrir e confirmar que conteúdo, ordem e títulos foram preservados.
 - [ ] Reordenar blocos, remover um bloco e salvar.
 - [ ] Fechar e abrir novamente; confirmar título, ordem, conteúdo e imagens.
 - [ ] Alternar tema, cor de destaque e idioma; confirmar que o conteúdo digitado não se perde.
@@ -59,6 +60,16 @@ Observação: o usuário precisa abrir o aplicativo pelo menos uma vez para regi
 - [ ] Marcar todos os itens; confirmar liberação.
 - [ ] Desmarcar um item; confirmar que o bloqueio volta.
 - [ ] Confirmar que checklist não obrigatória não bloqueia a saída.
+- [ ] Com duas regras obrigatórias, digitar uma corretamente e confirmar que a outra continua pendente.
+- [ ] Confirmar que uma letra, acento, pontuação, espaço ou maiúscula diferente não valida a resposta.
+- [ ] Confirmar que o texto longo só valida quando todo o conteúdo, inclusive as quebras de linha, é digitado.
+- [ ] Testar Ctrl+V, Ctrl+Shift+V, Shift+Insert, botão central do mouse e tentativa de copiar o rótulo de referência; confirmar que os campos de transcrição não aceitam a colagem usual.
+- [ ] Confirmar que o contador zerado não libera a janela com regras ou texto longo ainda pendentes.
+- [ ] Confirmar que as transcrições completas não liberam a janela enquanto o contador estiver ativo.
+- [ ] Após liberar o fechamento, alterar uma resposta para torná-la incorreta e confirmar que a saída é bloqueada novamente.
+- [ ] Com checklist, regras e texto longo simultâneos, confirmar que **todos** precisam estar concluídos para liberar o fechamento.
+- [ ] Abrir a prévia com uma transcrição muito longa e confirmar que **Fechar prévia** e o X permitem encerrá-la sem concluir o exercício.
+- [ ] Reiniciar a sessão e confirmar que todas as respostas retornam vazias, embora os textos de referência persistam.
 - [ ] Em uma versão de teste instrumentada, simular falha do temporizador e confirmar que a janela se libera definitivamente, mesmo após clicar em itens de checklist.
 - [ ] Confirmar que uma falha ao reabilitar o botão OK provoca encerramento seguro da janela em vez de bloqueio permanente.
 

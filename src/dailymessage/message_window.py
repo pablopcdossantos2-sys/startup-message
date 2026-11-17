@@ -532,7 +532,7 @@ def run_startup_message(cfg: Config, tr: Translator, *, delay_seconds: float = S
         # Testa os widgets de transcrição mesmo com a configuração padrão vazia de exercícios.
         fixture = [
             {"type": "retype_rules", "title": "Regras", "items": ["Ler com atenção", "Seguir o plano"]},
-            {"type": "retype_text", "title": "Compromisso", "text": "Exemplo de texto.\\nSegunda linha."},
+            {"type": "retype_text", "title": "Compromisso", "text": "Exemplo de texto.\nSegunda linha."},
         ]
         cfg = dataclasses.replace(cfg, blocks=cfg.blocks + fixture).sanitized()
     theme.apply_mode(cfg.theme)
