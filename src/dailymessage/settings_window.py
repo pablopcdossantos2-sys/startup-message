@@ -1,4 +1,4 @@
-"""Janela de configurações com editor de blocos (texto, imagem, checklist)."""
+"""Janela de configurações com editor de textos, imagens, checklists e transcrições."""
 from __future__ import annotations
 
 import copy
@@ -120,11 +120,14 @@ class SettingsApp(ctk.CTk):
         self.blocks_frame.pack(fill="x", pady=(8, 0))
         add_row = ctk.CTkFrame(body, fg_color="transparent")
         add_row.pack(anchor="w", pady=(4, 0))
-        for kind in ("text", "image", "checklist"):
-            ctk.CTkButton(add_row, text=tr.t(f"add.{kind}"), height=36, corner_radius=10,
-                          font=theme.font(13, "bold"), fg_color=accent, hover_color=accent_hover,
-                          text_color=theme.ON_ACCENT,
-                          command=lambda k=kind: self._add(k)).pack(side="left", padx=(0, 8))
+        for group in (("text", "image", "checklist"), ("retype_rules", "retype_text")):
+            row = ctk.CTkFrame(add_row, fg_color="transparent")
+            row.pack(anchor="w", pady=(0, 8))
+            for kind in group:
+                ctk.CTkButton(row, text=tr.t(f"add.{kind}"), height=36, corner_radius=10,
+                              font=theme.font(13, "bold"), fg_color=accent, hover_color=accent_hover,
+                              text_color=theme.ON_ACCENT,
+                              command=lambda k=kind: self._add(k)).pack(side="left", padx=(0, 8))
         self._render_blocks()
 
         # --- tempo ---
@@ -261,7 +264,8 @@ class SettingsApp(ctk.CTk):
         body = ctk.CTkFrame(card, fg_color="transparent")
         body.pack(fill="x", padx=12, pady=(0, 12))
         builder = {"text": self._edit_text, "image": self._edit_image,
-                   "checklist": self._edit_checklist}[b["type"]]
+                   "checklist": self._edit_checklist, "retype_rules": self._edit_retype_rules,
+                   "retype_text": self._edit_retype_text}[b["type"]]
         self._getters.append(builder(body, b))
 
     def _edit_text(self, body, b: dict):
@@ -363,6 +367,47 @@ class SettingsApp(ctk.CTk):
             d["title"] = title.get().strip()[:MAX_LIST_TITLE_LEN]
             d["items"] = [ln.strip() for ln in box.get("1.0", "end-1c").splitlines() if ln.strip()]
             d["required"] = bool(req.get())
+
+        return get
+
+    def _edit_retype_rules(self, body, b: dict):
+        """O autor cadastra cada regra em uma linha; o usuário transcreve individualmente."""
+        tr = self.tr
+        title = ctk.CTkEntry(body, height=34, corner_radius=8, font=theme.font(13),
+                             placeholder_text=tr.t("retype.title.placeholder"),
+                             **self._field(theme.SURFACE))
+        title.pack(fill="x", pady=(0, 6))
+        title.insert(0, b.get("title", ""))
+        self._muted(body, tr.t("retype.rules.hint"), 12, wraplength=600).pack(anchor="w", pady=(0, 5))
+        box = ctk.CTkTextbox(body, height=125, corner_radius=10, font=theme.font(14),
+                             border_width=1, wrap="word", **self._field(theme.SURFACE))
+        box.pack(fill="x")
+        box.insert("1.0", "\n".join(b.get("items", [])))
+
+        def get(d: dict) -> None:
+            d["title"] = title.get().strip()[:MAX_LIST_TITLE_LEN]
+            d["items"] = [line.strip() for line in box.get("1.0", "end-1c").splitlines()
+                          if line.strip()]
+
+        return get
+
+    def _edit_retype_text(self, body, b: dict):
+        """O autor define um texto integral, que deve ser redigitado na inicialização."""
+        tr = self.tr
+        title = ctk.CTkEntry(body, height=34, corner_radius=8, font=theme.font(13),
+                             placeholder_text=tr.t("retype.title.placeholder"),
+                             **self._field(theme.SURFACE))
+        title.pack(fill="x", pady=(0, 6))
+        title.insert(0, b.get("title", ""))
+        self._muted(body, tr.t("retype.text.hint"), 12, wraplength=600).pack(anchor="w", pady=(0, 5))
+        box = ctk.CTkTextbox(body, height=175, corner_radius=10, font=theme.font(14),
+                             border_width=1, wrap="word", **self._field(theme.SURFACE))
+        box.pack(fill="x")
+        box.insert("1.0", b.get("text", ""))
+
+        def get(d: dict) -> None:
+            d["title"] = title.get().strip()[:MAX_LIST_TITLE_LEN]
+            d["text"] = box.get("1.0", "end-1c")
 
         return get
 
@@ -512,14 +557,20 @@ class SettingsApp(ctk.CTk):
             self._feedback(tr.t("err.too_long", max=MAX_TOTAL_TEXT), error=True)
             return None
         for block in self.blocks:
-            if block.get("type") != "checklist":
-                continue
-            items = block.get("items", [])
-            if len(items) > MAX_ITEMS:
-                self._feedback(tr.t("err.too_many_items", max=MAX_ITEMS), error=True)
-                return None
-            if any(len(str(item)) > MAX_ITEM_LEN for item in items):
-                self._feedback(tr.t("err.item_too_long", max=MAX_ITEM_LEN), error=True)
+            kind = block.get("type")
+            if kind in ("checklist", "retype_rules"):
+                items = block.get("items", [])
+                if len(items) > MAX_ITEMS:
+                    self._feedback(tr.t("err.too_many_items", max=MAX_ITEMS), error=True)
+                    return None
+                if any(len(str(item)) > MAX_ITEM_LEN for item in items):
+                    self._feedback(tr.t("err.item_too_long", max=MAX_ITEM_LEN), error=True)
+                    return None
+                if kind == "retype_rules" and not items:
+                    self._feedback(tr.t("err.retype_empty"), error=True)
+                    return None
+            elif kind == "retype_text" and not str(block.get("text", "")).strip():
+                self._feedback(tr.t("err.retype_empty"), error=True)
                 return None
         blocks = cfgmod.sanitize_blocks(self.blocks)
         if not blocks:
