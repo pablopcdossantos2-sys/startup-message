@@ -606,6 +606,11 @@ class SettingsApp(ctk.CTk):
 def run_settings(cfg: Config, *, smoke_test: bool = False) -> None:
     root = SettingsApp(cfg)
     if smoke_test:
-        # O teste de integração abre e desenha a janela de Configurações e depois encerra.
+        # Exercita os editores novos dentro do MSIX, sem alterar ou salvar o perfil.
+        root.blocks.extend([
+            {"type": "retype_rules", "title": "Regras", "items": ["Conferir minha agenda"]},
+            {"type": "retype_text", "title": "Compromisso", "text": "Um compromisso.\nOutro compromisso."},
+        ])
+        root._render_blocks()
         root.after(1500, root.destroy)
     root.mainloop()
